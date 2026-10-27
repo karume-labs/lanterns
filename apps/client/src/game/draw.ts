@@ -120,7 +120,16 @@ export const drawConstructs = (g: Graphics, rows: number[][]): void => {
     if (wall) {
       drawPixels(g, x, y, WALL_ART, { b: COLORS.twilight, m: COLORS.night }, 4);
     } else {
-      drawPixels(g, x, y, TURRET_ART, { "0": COLORS.night, c: COLORS.moss }, 3);
+      // The barrel art points up: turn it to the turret's aim (row[5]).
+      const palette = { "0": COLORS.night, c: COLORS.moss };
+      const aim = ((row[5] ?? 0) * Math.PI) / 180 + Math.PI / 2;
+      drawPixels(g, x, y + 4.5, TURRET_ART.slice(3), palette, 3);
+      const cos = Math.cos(aim);
+      const sin = Math.sin(aim);
+      g.save();
+      g.transform(cos, sin, -sin, cos, x, y);
+      drawPixels(g, 0, -4.5, TURRET_ART.slice(0, 3), palette, 3);
+      g.restore();
     }
   }
 };
