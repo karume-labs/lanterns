@@ -14,15 +14,18 @@
   "dependencies": {
     "@lanterns/domain": "workspace:*",
     "@vitejs/plugin-react": "latest",
+    "howler": "^2.2.4",
     "pixi.js": "^8.16.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "vite": "^8.0.0"
+    "vite": "^8.0.0",
+    "zustand": "^5.0.16"
   },
   "devDependencies": {
+    "@types/bun": "latest",
+    "@types/howler": "^2.2.13",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
-    "@types/bun": "latest",
     "typescript": "^5.9.3"
   }
 }
