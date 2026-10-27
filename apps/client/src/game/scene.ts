@@ -11,6 +11,7 @@ import {
 } from "@lanterns/domain";
 import type { Container } from "pixi.js";
 import { Camera } from "./camera";
+import { frameRefs } from "./frame-refs";
 import { FxTracker } from "./fx";
 import { Interpolator } from "./interpolator";
 import { LocalPlayer } from "./local-player";
@@ -20,6 +21,8 @@ export interface FrameView {
   room: RoomState | null;
   snap: Snapshot | null;
   playerId: string | null;
+  spectating: boolean;
+  spectateTargetId: string | null;
 }
 
 const HUB_BOUNDS = { width: HUB_SIZE.width, height: HUB_SIZE.height };
@@ -57,8 +60,9 @@ export class Scene {
       this.#lastSnapT = snap.t;
       this.#interp.push(snap);
       this.#fx.ingest(snap.ev);
-      for (const event of snap.ev)
-        if (event.k === "shake") this.#camera.addShake(event.n);
+      if (frameRefs.shakeEnabled)
+        for (const event of snap.ev)
+          if (event.k === "shake") this.#camera.addShake(event.n);
       this.#reconcile(room, snap, playerId);
     }
 
@@ -78,9 +82,16 @@ export class Scene {
       const speed = hub ? HUB_PLAYER_SPEED : PLAYER_SPEED * roleSpeed;
       this.#local.advance(dt, speed);
     }
-    const target = moving
+    let target = moving
       ? this.#local.position
       : { x: bounds.width / 2, y: bounds.height / 2 };
+    if (view.spectating) {
+      const watched = view.spectateTargetId
+        ? room.players.findIndex((p) => p.id === view.spectateTargetId)
+        : -1;
+      const row = watched >= 0 ? snap?.pl[watched] : undefined;
+      if (row) target = { x: row[0], y: row[1] };
+    }
     this.#camera.update(target, bounds, dt);
     this.#fx.update(dt);
 

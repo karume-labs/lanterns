@@ -1,32 +1,18 @@
-import type { InputState, RoomState, Snapshot } from "@lanterns/domain";
 import { Application } from "pixi.js";
 import { useEffect, useRef } from "react";
-import { setCurrentInput } from "../input/current-input";
+import { dispatchInput } from "../input/current-input";
 import { attachKeyboard } from "../input/keyboard";
 import { COLORS, VIEW_H, VIEW_W } from "./config";
+import { frameRefs } from "./frame-refs";
 import { Scene } from "./scene";
-
-interface GameViewProps {
-  room: RoomState | null;
-  snap: Snapshot | null;
-  playerId: string | null;
-  onInput: (input: InputState) => void;
-}
 
 /**
  * Fixed low-resolution buffer upscaled by whole numbers only, so pixels stay
- * square and crisp at every window size.
+ * square and crisp at every window size. Snapshot data arrives through
+ * `frame-refs`, never React props, so the overlay never re-renders at 15 Hz.
  */
-export const GameView = ({ room, snap, playerId, onInput }: GameViewProps) => {
+export const GameView = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const roomRef = useRef(room);
-  const snapRef = useRef(snap);
-  const playerRef = useRef(playerId);
-  const inputRef = useRef(onInput);
-  roomRef.current = room;
-  snapRef.current = snap;
-  playerRef.current = playerId;
-  inputRef.current = onInput;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -63,9 +49,11 @@ export const GameView = ({ room, snap, playerId, onInput }: GameViewProps) => {
         app.ticker.add(() => {
           const dt = Math.min(0.1, app.ticker.deltaMS / 1000);
           scene.update(dt, {
-            room: roomRef.current,
-            snap: snapRef.current,
-            playerId: playerRef.current,
+            room: frameRefs.room,
+            snap: frameRefs.snap,
+            playerId: frameRefs.playerId,
+            spectating: frameRefs.spectating,
+            spectateTargetId: frameRefs.spectateTargetId,
           });
         });
       });
@@ -76,14 +64,7 @@ export const GameView = ({ room, snap, playerId, onInput }: GameViewProps) => {
     };
   }, []);
 
-  useEffect(
-    () =>
-      attachKeyboard((input) => {
-        setCurrentInput(input);
-        inputRef.current(input);
-      }),
-    [],
-  );
+  useEffect(() => attachKeyboard((input) => dispatchInput(input)), []);
 
   return (
     <canvas

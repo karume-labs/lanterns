@@ -1,18 +1,28 @@
-import { HUB_DUMMY, PLAYER_FLAG, type Role } from "@lanterns/domain";
+import {
+  HUB_DUMMY,
+  PLAYER_FLAG,
+  ROLES_TABLE,
+  type Role,
+} from "@lanterns/domain";
 import type { Graphics } from "pixi.js";
 import { DUMMY_ART, PLAYER_ART } from "./art";
 import { COLORS } from "./config";
 import { drawPixels } from "./pixels";
 
-const ROLE_COLORS: Record<Role, number> = {
-  builder: 0x5bc0eb,
-  medic: 0xf284b6,
-  striker: 0xf95738,
-  scout: 0xb8de6f,
-};
+const roleCache = new Map<Role, number>();
 
-export const roleColor = (role: Role | null): number =>
-  role ? ROLE_COLORS[role] : COLORS.neutral;
+const toHex = (value: string): number =>
+  Number.parseInt(value.replace(/^#/, ""), 16);
+
+/** Palette colors for each role, parsed once from the domain table. */
+export const roleColor = (role: Role | null): number => {
+  if (!role) return COLORS.neutral;
+  const cached = roleCache.get(role);
+  if (cached !== undefined) return cached;
+  const parsed = toHex(ROLES_TABLE[role].color);
+  roleCache.set(role, parsed);
+  return parsed;
+};
 
 export const drawPlayer = (
   g: Graphics,

@@ -1,25 +1,15 @@
-import type { SnapshotEvent } from "@lanterns/domain";
+import { LANTERN_POSITION, type SnapshotEvent } from "@lanterns/domain";
 import { Container, Graphics, Text, TextStyle } from "pixi.js";
 import type { Camera } from "./camera";
-
-const FLOAT_LIFE_SECONDS = 0.75;
-const RING_LIFE_SECONDS = 0.35;
-const RING_MAX_RADIUS = 16;
-
-interface Ring {
-  x: number;
-  y: number;
-  life: number;
-  color: number;
-}
-
-interface Floater {
-  text: Text;
-  x: number;
-  y: number;
-  life: number;
-  rise: number;
-}
+import { COLORS } from "./config";
+import { frameRefs } from "./frame-refs";
+import {
+  FLOAT_LIFE_SECONDS,
+  type Floater,
+  RING_LIFE_SECONDS,
+  type Ring,
+  renderFx,
+} from "./fx-render";
 
 const styleCache = new Map<number, TextStyle>();
 
@@ -59,10 +49,15 @@ export class FxTracker {
     this.#rings.clear();
   }
 
+  render(camera: Camera): void {
+    renderFx(this.#rings, this.#ringRows, this.#floaters, camera);
+  }
+
   ingest(events: readonly SnapshotEvent[]): void {
     for (const event of events) {
       if (event.k === "hit") {
-        this.#spawnNumber(`-${event.n}`, event.x, event.y, 0xffffff);
+        if (frameRefs.damageNumbers)
+          this.#spawnNumber(`-${event.n}`, event.x, event.y, 0xffffff);
         this.#ringRows.push({
           x: event.x,
           y: event.y,
@@ -70,13 +65,29 @@ export class FxTracker {
           color: 0xffffff,
         });
       } else if (event.k === "die") {
-        this.#spawnNumber("KO", event.x, event.y, 0xef8354);
+        if (frameRefs.damageNumbers)
+          this.#spawnNumber("KO", event.x, event.y, 0xef8354);
         this.#ringRows.push({
           x: event.x,
           y: event.y,
           life: RING_LIFE_SECONDS,
           color: 0xef8354,
         });
+      } else if (event.k === "flare") {
+        this.#ringRows.push({
+          x: LANTERN_POSITION.x,
+          y: LANTERN_POSITION.y,
+          life: 0.7,
+          color: COLORS.lantern,
+          max: 420,
+        });
+      } else if (event.k === "fuel" && frameRefs.damageNumbers) {
+        this.#spawnNumber(
+          `+${event.n}`,
+          LANTERN_POSITION.x,
+          LANTERN_POSITION.y,
+          0x7be36b,
+        );
       }
     }
   }
@@ -95,27 +106,6 @@ export class FxTracker {
       const ring = this.#ringRows[index];
       ring.life -= dt;
       if (ring.life <= 0) this.#ringRows.splice(index, 1);
-    }
-  }
-
-  render(camera: Camera): void {
-    for (const floater of this.#floaters) {
-      const screen = camera.worldToScreen(floater.x, floater.y);
-      floater.text.position.set(
-        Math.round(screen.x),
-        Math.round(screen.y - floater.rise),
-      );
-      floater.text.alpha = Math.min(1, (floater.life / FLOAT_LIFE_SECONDS) * 2);
-    }
-    const rings = this.#rings.clear();
-    for (const ring of this.#ringRows) {
-      const progress = 1 - ring.life / RING_LIFE_SECONDS;
-      const screen = camera.worldToScreen(ring.x, ring.y);
-      rings.circle(screen.x, screen.y, 4 + progress * RING_MAX_RADIUS).stroke({
-        width: 2,
-        color: ring.color,
-        alpha: ring.life / RING_LIFE_SECONDS,
-      });
     }
   }
 
