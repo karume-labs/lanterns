@@ -28,7 +28,7 @@ export interface Snapshot {
   pl: number[][];
   /** [x, y, kindIdx, hp] per enemy */
   en: number[][];
-  /** [x, y, kindIdx, hp, ownerIdx] per construct */
+  /** [x, y, kindIdx, hp, ownerIdx, aimDeg] per construct */
   cs: number[][];
   /** [x, y] per ground shard */
   sh: number[][];

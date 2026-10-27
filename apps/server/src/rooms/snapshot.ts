@@ -61,6 +61,8 @@ export function buildSnapshot(
         0,
         state.players.findIndex((player) => player.id === construct.ownerId),
       ),
+      // Aim in whole degrees so the client can turn the turret barrel.
+      Math.round((construct.angle * 180) / Math.PI),
     ]),
     sh: state.shards
       .filter((shard) => !shard.carriedBy)
