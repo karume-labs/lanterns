@@ -1,0 +1,177 @@
+:root {
+  font-family: monospace;
+  background: #101628;
+  color: #f8fafc;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow: hidden;
+}
+main {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+.game-canvas {
+  background: #101628;
+  image-rendering: pixelated;
+  left: 50%;
+  position: fixed;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.panel {
+  background: #1d2942;
+  border: 4px solid #a8c4dc;
+  box-shadow: 8px 8px 0 #101628;
+  left: 50%;
+  max-width: 360px;
+  padding: 24px;
+  position: fixed;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 32px);
+}
+h1 {
+  color: #ffd166;
+  margin: 0 0 8px;
+}
+label,
+input,
+button {
+  display: block;
+  font: inherit;
+  width: 100%;
+}
+label {
+  margin: 20px 0 8px;
+}
+input {
+  background: #101628;
+  border: 2px solid #a8c4dc;
+  color: #f8fafc;
+  margin-top: 6px;
+  padding: 10px;
+}
+button {
+  background: #ffd166;
+  border: 0;
+  color: #101628;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 12px;
+  padding: 11px;
+}
+button:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+.join-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.join-row input,
+.join-row button {
+  margin: 0;
+}
+.join-row button {
+  width: 96px;
+}
+.status,
+.error {
+  font-size: 12px;
+  margin: 0;
+  text-transform: uppercase;
+}
+.status {
+  color: #74c69d;
+}
+.roles {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 12px;
+}
+.roles button {
+  margin: 0;
+  text-transform: capitalize;
+}
+.roles .selected {
+  background: #74c69d;
+}
+.hud {
+  display: flex;
+  gap: 16px;
+  left: 16px;
+  position: fixed;
+  top: 16px;
+}
+.hud span,
+.hud strong {
+  background: #1d2942;
+  border: 2px solid #a8c4dc;
+  padding: 8px;
+}
+.levelup {
+  background: #1d2942;
+  border: 4px solid #ffd166;
+  bottom: 24px;
+  display: flex;
+  gap: 8px;
+  left: 50%;
+  padding: 12px;
+  position: fixed;
+  transform: translateX(-50%);
+}
+.levelup button {
+  margin: 0;
+  min-width: 130px;
+}
+.levelup small {
+  display: block;
+  margin-top: 5px;
+}
+.touch-controls {
+  bottom: max(16px, env(safe-area-inset-bottom));
+  display: flex;
+  gap: 8px;
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+}
+.touch-controls button {
+  border-radius: 50%;
+  height: 70px;
+  margin: 0;
+  width: 70px;
+}
+@media (orientation: portrait) and (pointer: coarse) {
+  body::after {
+    align-items: center;
+    background: #101628;
+    color: #ffd166;
+    content: "Rotate your phone to play";
+    display: flex;
+    font-size: 22px;
+    inset: 0;
+    justify-content: center;
+    position: fixed;
+    z-index: 10;
+  }
+}
+.error {
+  color: #ef8354;
+  margin-top: 12px;
+}
+.menu li span {
+  color: #74c69d;
+  font-size: 12px;
+  margin-right: 8px;
+}
+.waiting {
+  color: #a8c4dc;
+}
