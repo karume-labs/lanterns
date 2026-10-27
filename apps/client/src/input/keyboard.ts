@@ -76,7 +76,11 @@ export const attachKeyboard = (
   window.addEventListener("mousemove", onMouseMove);
   window.addEventListener("mousedown", onMouseDown);
   window.addEventListener("mouseup", onMouseUp);
-  const interval = window.setInterval(publish, 50);
+  const interval = window.setInterval(() => {
+    // Stream only while keys or the mouse are driving something: otherwise a
+    // held-but-still touch joystick would be overwritten with an empty state.
+    if (keys.size > 0 || shooting) publish();
+  }, 50);
 
   return () => {
     window.removeEventListener("keydown", onKeyDown);
