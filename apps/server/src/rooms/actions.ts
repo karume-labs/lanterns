@@ -16,6 +16,8 @@ export const setInput = (
   input: InputState,
 ): void => {
   const room = roomOf(rooms, code);
+  // Watchers receive snapshots but never drive a player: drop their input.
+  if (room.spectators.has(playerId)) return;
   playerOf(room, playerId);
   const normalized = normalizeInput(input);
   // Queue edge intents on receipt: they survive until a tick consumes them.

@@ -37,6 +37,16 @@ export const removePlayer = (
 
 type Rooms = Map<string, RuntimeRoom>;
 
+/** Drop a watcher, its socket, and any token pointing at it. */
+const removeSpectator = (room: RuntimeRoom, playerId: string): boolean => {
+  if (!room.spectators.delete(playerId)) return false;
+  for (const [token, owner] of room.tokens)
+    if (owner === playerId) room.tokens.delete(token);
+  room.sockets.delete(playerId);
+  room.disconnectedAt.delete(playerId);
+  return true;
+};
+
 /** Explicit leave: remove the player immediately, no idle post. */
 export const leaveRoom = (
   rooms: Rooms,
@@ -44,7 +54,11 @@ export const leaveRoom = (
   socketId: string,
 ): { events: RoomEventMsg[]; room: RuntimeRoom } | null => {
   for (const room of rooms.values()) {
-    if (!room.state.players.some((player) => player.id === playerId)) continue;
+    if (!room.state.players.some((player) => player.id === playerId)) {
+      if (room.sockets.get(playerId) === socketId)
+        removeSpectator(room, playerId);
+      continue;
+    }
     if (room.sockets.get(playerId) !== socketId) continue;
     const events = removePlayer(room, playerId);
     if (room.state.players.length === 0) {
@@ -68,7 +82,15 @@ export const disconnect = (
   const room = rooms.get(roomCode);
   if (!room) return null;
   if (room.sockets.get(playerId) !== socketId) return null; // stale socket
-  if (!room.state.players.some((player) => player.id === playerId)) return null;
+  if (!room.state.players.some((player) => player.id === playerId)) {
+    // Watchers get the same reconnect window as players; the tick expires
+    // them through removePlayer once it runs out.
+    if (room.spectators.has(playerId)) {
+      room.sockets.delete(playerId);
+      room.disconnectedAt.set(playerId, now);
+    }
+    return null;
+  }
   room.sockets.delete(playerId);
   room.disconnectedAt.set(playerId, now);
   const player = room.state.players.find(

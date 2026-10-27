@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { COUNTDOWN_MS, HUB_CIRCLE, RECONNECT_GRACE_MS } from "@lanterns/domain";
+import {
+  COUNTDOWN_MS,
+  EMPTY_INPUT,
+  HUB_CIRCLE,
+  RECONNECT_GRACE_MS,
+} from "@lanterns/domain";
 import { RoomError } from "./errors";
 import { createRoomManager } from "./room-manager";
 
@@ -195,5 +200,47 @@ describe("reconnect handling", () => {
     const stale = manager.disconnect(code, "p1", "s1", T0 + 5);
     expect(stale).toBeNull();
     expect(created.room.players[0]?.connected).toBe(true);
+  });
+});
+
+describe("mid-match spectators", () => {
+  const activeRoom = () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    const code = created.room.code;
+    manager.selectRole(code, "p1", "builder");
+    const host = created.room.players[0];
+    if (!host) throw new Error("missing host");
+    host.position = { x: HUB_CIRCLE.x, y: HUB_CIRCLE.y };
+    manager.tick(T0);
+    manager.tick(T0 + COUNTDOWN_MS + 1);
+    return { manager, code, room: created.room };
+  };
+
+  test("refuses a watcher while the room is still in the hub", () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    expect(() =>
+      manager.watchRoom(created.room.code, "w1", "Wendy", "s9"),
+    ).toThrow(RoomError);
+  });
+
+  test("a watcher joins a running match and never drives a player", () => {
+    const { manager, code, room } = activeRoom();
+    const watched = manager.watchRoom(code, "w1", "Wendy", "s9");
+    expect(watched.spectator).toBe(true);
+    expect(room.players).toHaveLength(1);
+
+    const before = JSON.stringify(room.players[0]?.position);
+    manager.setInput(code, "w1", { ...EMPTY_INPUT, moveX: 1 });
+    expect(JSON.stringify(room.players[0]?.position)).toBe(before);
+
+    // Reconnects come back as watchers, and leaving clears them entirely.
+    manager.disconnect(code, "w1", "s9", T0);
+    const rejoined = manager.rejoinRoom(watched.token, "s10");
+    expect(rejoined.spectator).toBe(true);
+    manager.leaveRoom("w1", "s10");
+    expect(() => manager.setInput(code, "w1", EMPTY_INPUT)).toThrow(RoomError);
+    expect(() => manager.rejoinRoom(watched.token, "s11")).toThrow(RoomError);
   });
 });

@@ -19,6 +19,8 @@ export interface MutationResult {
   events: RoomEventMsg[];
   /** a level-up choice set rolled as part of this mutation */
   levelUp: boolean;
+  /** true when the caller joined as a mid-match spectator */
+  spectator?: boolean;
 }
 
 export interface TickResult {
@@ -43,6 +45,8 @@ export interface RuntimeRoom {
   sockets: Map<string, string>;
   /** player id -> ms timestamp of the disconnect */
   disconnectedAt: Map<string, number>;
+  /** mid-match watchers: player id -> display name (never simulated) */
+  spectators: Map<string, string>;
   dummy: { health: number; deadUntil: number };
   prevReady: Map<string, boolean>;
   dirty: boolean;
@@ -62,6 +66,7 @@ export const createRuntimeRoom = (
   tokens: new Map([[token, playerId]]),
   sockets: new Map([[playerId, socketId]]),
   disconnectedAt: new Map(),
+  spectators: new Map(),
   dummy: { health: HUB_DUMMY_HEALTH, deadUntil: 0 },
   prevReady: new Map([[playerId, false]]),
   dirty: true,

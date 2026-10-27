@@ -17,12 +17,14 @@ const welcome = (
   socket: Socket,
   roomCode: string,
   token: string,
+  spectator?: boolean,
 ): ServerMessage => ({
   type: "welcome",
   playerId: socket.data.playerId,
   reconnectToken: token,
   roomCode,
   protocol: PROTOCOL_VERSION,
+  spectator,
 });
 
 /** Route one validated message; RoomErrors become player-facing errors. */
@@ -87,6 +89,19 @@ const dispatchConnection = (
       publishMutation(ctx.server, joined);
       return;
     }
+    case "watch-room": {
+      const watched = ctx.rooms.watchRoom(
+        message.code,
+        socket.data.playerId,
+        message.name,
+        socket.data.socketId,
+      );
+      moveToRoom(socket, watched.room.code);
+      reply(socket, welcome(socket, watched.room.code, watched.token, true));
+      // Watchers join mid-run: hand them the room state straight away.
+      reply(socket, { type: "room-state", room: watched.room });
+      return;
+    }
     case "rejoin-room": {
       const rejoined = ctx.rooms.rejoinRoom(
         message.token,
@@ -94,7 +109,10 @@ const dispatchConnection = (
       );
       socket.data.playerId = rejoined.playerId;
       moveToRoom(socket, rejoined.room.code);
-      reply(socket, welcome(socket, rejoined.room.code, message.token));
+      reply(
+        socket,
+        welcome(socket, rejoined.room.code, message.token, rejoined.spectator),
+      );
       publishMutation(ctx.server, rejoined);
       ctx.metrics.reconnects += 1;
       return;

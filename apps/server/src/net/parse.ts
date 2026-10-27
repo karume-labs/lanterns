@@ -39,12 +39,13 @@ export const parseClientMessage = (raw: string): ClientMessage | null => {
       const name = cleanName(decoded.name);
       return name ? { type: "create-room", name } : null;
     }
-    case "join-room": {
+    case "join-room":
+    case "watch-room": {
       const name = cleanName(decoded.name);
       const code =
         typeof decoded.code === "string" ? decoded.code.toUpperCase() : "";
       if (!name || !/^[A-Z0-9]{5}$/.test(code)) return null;
-      return { type: "join-room", code, name };
+      return { type: decoded.type, code, name };
     }
     case "rejoin-room":
       return typeof decoded.token === "string" && decoded.token.length > 8

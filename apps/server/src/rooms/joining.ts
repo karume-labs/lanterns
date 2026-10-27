@@ -82,6 +82,17 @@ export const rejoinRoom = (
     const player = room.state.players.find(
       (candidate) => candidate.id === playerId,
     );
+    if (!player && room.spectators.has(playerId)) {
+      room.sockets.set(playerId, socketId);
+      room.disconnectedAt.delete(playerId);
+      return {
+        room: room.state,
+        playerId,
+        events: [],
+        levelUp: false,
+        spectator: true,
+      };
+    }
     if (!player)
       throw new RoomError(
         "rejoin-failed",

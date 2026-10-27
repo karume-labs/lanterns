@@ -11,6 +11,7 @@ import { createRoom, joinRoom, rejoinRoom } from "./joining";
 import { disconnect, leaveRoom } from "./leaving";
 import type { MutationResult, RuntimeRoom, TickResult } from "./runtime";
 import { tickRoom } from "./tick";
+import { watchRoom } from "./watching";
 
 export interface RoomManager {
   readonly roomCount: number;
@@ -21,6 +22,12 @@ export interface RoomManager {
     socketId: string,
   ): { room: RoomState; token: string };
   joinRoom(
+    code: string,
+    playerId: string,
+    name: string,
+    socketId: string,
+  ): MutationResult & { token: string };
+  watchRoom(
     code: string,
     playerId: string,
     name: string,
@@ -73,6 +80,8 @@ export const createRoomManager = (): RoomManager => {
       createRoom(rooms, playerId, name, socketId),
     joinRoom: (code, playerId, name, socketId) =>
       joinRoom(rooms, code, playerId, name, socketId),
+    watchRoom: (code, playerId, name, socketId) =>
+      watchRoom(rooms, code, playerId, name, socketId),
     rejoinRoom: (token, socketId) => rejoinRoom(rooms, token, socketId),
     leaveRoom: (playerId, socketId) => {
       const left = leaveRoom(rooms, playerId, socketId);
