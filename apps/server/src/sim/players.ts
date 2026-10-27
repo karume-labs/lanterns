@@ -82,12 +82,9 @@ export const stepPlayers = (
       rt.lastShotAt.set(player.id, now);
       fireShot(state, rt, player);
     }
-    if (input.useRoleAbility) {
-      rt.inputs.set(player.id, { ...input, useRoleAbility: false });
+    if (rt.pendingAbility.delete(player.id))
       castAbility(state, rt, player, now);
-    }
-    if (input.placeConstruct) {
-      rt.inputs.set(player.id, { ...input, placeConstruct: false });
+    if (rt.pendingPlace.delete(player.id)) {
       placeAt(
         state,
         rt,

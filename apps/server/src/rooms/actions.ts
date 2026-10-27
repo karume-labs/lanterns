@@ -17,7 +17,11 @@ export const setInput = (
 ): void => {
   const room = roomOf(rooms, code);
   playerOf(room, playerId);
-  room.rt.inputs.set(playerId, normalizeInput(input));
+  const normalized = normalizeInput(input);
+  // Queue edge intents on receipt: they survive until a tick consumes them.
+  if (normalized.useRoleAbility) room.rt.pendingAbility.add(playerId);
+  if (normalized.placeConstruct) room.rt.pendingPlace.add(playerId);
+  room.rt.inputs.set(playerId, normalized);
 };
 
 export const selectRole = (

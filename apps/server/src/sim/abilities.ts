@@ -1,5 +1,4 @@
 import {
-  ABILITY_GLOBAL_COOLDOWN_MS,
   BEACON_DURATION_MS,
   distance,
   type Player,
@@ -13,8 +12,9 @@ import { placeAt } from "./constructs";
 import type { SimRuntime } from "./runtime";
 
 /**
- * Cast the role's ability if the global cooldown, energy pool, and role allow
- * it. Always consumes the edge intent (the caller clears the flag).
+ * Cast the role's ability if energy and the role allow it. The caller consumes
+ * the edge intent, so each press casts exactly once; energy is the only limiter
+ * and consecutive presses cast consecutively.
  */
 export const castAbility = (
   state: RoomState,
@@ -24,8 +24,6 @@ export const castAbility = (
 ): void => {
   if (!player.role) return;
   const role = ROLES_TABLE[player.role];
-  const lastAbility = rt.lastAbilityAt.get(player.id) ?? -1e9;
-  if (now - lastAbility < ABILITY_GLOBAL_COOLDOWN_MS) return;
   if (player.energy < role.abilityCost) return;
   player.energy = spendEnergy(
     player.energy,

@@ -60,8 +60,7 @@ export const stepLobby = (room: RuntimeRoom, now: number): void => {
         room.rt.lastShotAt.set(player.id, now);
         shootDummy(room, player, now);
       }
-      if (input.placeConstruct) {
-        room.rt.inputs.set(player.id, { ...input, placeConstruct: false });
+      if (room.rt.pendingPlace.delete(player.id)) {
         placeAt(
           state,
           room.rt,
@@ -74,8 +73,7 @@ export const stepLobby = (room: RuntimeRoom, now: number): void => {
           now,
         );
       }
-      if (input.useRoleAbility) {
-        room.rt.inputs.set(player.id, { ...input, useRoleAbility: false });
+      if (room.rt.pendingAbility.delete(player.id)) {
         castAbility(state, room.rt, player, now);
       }
     }

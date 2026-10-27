@@ -20,6 +20,13 @@ export interface Solid {
 export interface SimRuntime {
   /** Latest normalized input per player id. */
   inputs: Map<string, InputState>;
+  /**
+   * Sticky edge intents (one per press) queued when an input message arrives
+   * and consumed by the next tick, so a later poll that clears the flags in
+   * `inputs` can no longer swallow the press.
+   */
+  pendingAbility: Set<string>;
+  pendingPlace: Set<string>;
   /** ms timestamps of the last accepted shot per player */
   lastShotAt: Map<string, number>;
   /** ms timestamps of the last role ability per player */
@@ -46,6 +53,8 @@ export interface SimRuntime {
 
 export const createRuntime = (rng: () => number = Math.random): SimRuntime => ({
   inputs: new Map(),
+  pendingAbility: new Set(),
+  pendingPlace: new Set(),
   lastShotAt: new Map(),
   lastAbilityAt: new Map(),
   lastPlaceAt: new Map(),

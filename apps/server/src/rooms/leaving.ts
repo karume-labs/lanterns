@@ -20,6 +20,8 @@ export const removePlayer = (
   room.sockets.delete(playerId);
   room.disconnectedAt.delete(playerId);
   room.rt.inputs.delete(playerId);
+  room.rt.pendingAbility.delete(playerId);
+  room.rt.pendingPlace.delete(playerId);
   room.prevReady.delete(playerId);
   room.dirty = true;
 

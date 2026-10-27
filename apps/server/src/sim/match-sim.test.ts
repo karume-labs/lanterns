@@ -314,6 +314,19 @@ describe("revives and abilities", () => {
     expect(medic.energy).toBeLessThan(100);
   });
 
+  test("consecutive casts land while energy remains", () => {
+    const { state, rt } = setup(["medic", "striker"]);
+    const medic = state.players[0]!;
+    const ally = state.players[1]!;
+    ally.health = 1;
+    ally.position = { x: medic.position.x + 40, y: medic.position.y };
+    castAbility(state, rt, medic, T0 + 3000);
+    const afterFirst = medic.energy;
+    castAbility(state, rt, medic, T0 + 3100);
+    expect(medic.energy).toBeLessThan(afterFirst);
+    expect(ally.health).toBe(71);
+  });
+
   test("striker flare damages every enemy in range", () => {
     const { state, rt } = setup(["striker", "medic"]);
     const striker = state.players[0]!;
