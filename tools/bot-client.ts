@@ -7,7 +7,14 @@ import {
 } from "../packages/domain/src/index.ts";
 
 export const ROOM_CAPACITY = 4;
-const ROLE_CYCLE: Role[] = ["builder", "medic", "striker", "scout"];
+const ROLE_CYCLE: Role[] = [
+  "builder",
+  "medic",
+  "striker",
+  "scout",
+  "keeper",
+  "lumen",
+];
 
 export interface BotCounters {
   matchesStarted: number;
