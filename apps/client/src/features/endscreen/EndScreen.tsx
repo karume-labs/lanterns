@@ -28,13 +28,14 @@ export const EndScreen = () => {
   const room = useAppStore((state) => state.room);
   const stats = useAppStore((state) => state.stats);
   const playerId = useAppStore((state) => state.playerId);
+  const spectator = useAppStore((state) => state.spectator);
   const toast = useAppStore((state) => state.toast);
   const [bestTime, setBestTime] = useState(false);
   const saved = useRef(false);
 
   const won = room?.phase === "won";
   useEffect(() => {
-    if (!stats || saved.current) return;
+    if (!stats || spectator || saved.current) return;
     saved.current = true;
     setBucket(room?.players.length ?? 1);
     const entry: LeaderboardEntry = {
@@ -52,7 +53,7 @@ export const EndScreen = () => {
       setBestTime(true);
       toast("New best time!");
     }
-  }, [stats, playerId, toast, room]);
+  }, [stats, playerId, toast, room, spectator]);
 
   if (!room) return null;
   const isHost = room.hostId === playerId;
@@ -101,12 +102,18 @@ export const EndScreen = () => {
               {line}
             </p>
           ))}
-        <button onClick={again} type="button">
-          Play Again
-        </button>
-        <button className="secondary" onClick={returnToLobby} type="button">
-          Back to the Hub
-        </button>
+        {spectator ? (
+          <p className="end-sub">You watched this run to the end.</p>
+        ) : (
+          <button onClick={again} type="button">
+            Play Again
+          </button>
+        )}
+        {!spectator && (
+          <button className="secondary" onClick={returnToLobby} type="button">
+            Back to the Hub
+          </button>
+        )}
         <button className="secondary" onClick={leaveRoom} type="button">
           Leave
         </button>

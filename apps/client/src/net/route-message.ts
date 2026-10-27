@@ -19,7 +19,11 @@ export const routeServerMessage = (
   switch (message.type) {
     case "welcome":
       onToken(message.reconnectToken, message.playerId);
-      handlers.onWelcome(message.playerId, message.roomCode);
+      handlers.onWelcome(
+        message.playerId,
+        message.roomCode,
+        message.spectator === true,
+      );
       return;
     case "room-state":
       handlers.onRoom(message.room);

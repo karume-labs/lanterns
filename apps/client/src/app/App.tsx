@@ -43,6 +43,8 @@ export const App = () => {
         const store = useAppStore.getState();
         store.setRoom(room);
         store.setLevelUp(null);
+        // A successful join leaves the form screen for the room it opened.
+        if (store.screen === "join") store.go("hub");
         if (room.phase === "lobby" || room.phase === "countdown")
           store.setStats(null);
       },
@@ -57,17 +59,26 @@ export const App = () => {
         const store = useAppStore.getState();
         // The room died while we were away: back to the menu, not a dead HUD.
         if (code === "rejoin-failed") dropRoomLocally();
-        store.setError(message);
-        window.setTimeout(() => useAppStore.getState().setError(""), 5000);
+        store.setError(message, code);
+        // The mid-match offer stays until the player acts on it.
+        if (code !== "match-in-progress")
+          window.setTimeout(() => useAppStore.getState().setError(""), 5000);
       },
       onLatency: (ms) => useAppStore.getState().setLatency(ms),
-      onWelcome: (playerId) => {
-        useAppStore.getState().setPlayerId(playerId);
+      onWelcome: (playerId, _roomCode, spectator) => {
+        const store = useAppStore.getState();
+        // A seat was granted: retire the verdict that offered it.
+        store.setError("");
+        store.setPlayerId(playerId);
         setPlayerIdRef(playerId);
+        store.setSpectator(spectator);
+        // A mid-match watcher opens straight on the spectate banner.
+        if (spectator) store.go("spectate");
       },
     });
     setInputSink((input) => {
-      if (useAppStore.getState().room) socket.sendInput(input);
+      const store = useAppStore.getState();
+      if (store.room && !store.spectator) socket.sendInput(input);
     });
     return () => {
       setInputSink(null);

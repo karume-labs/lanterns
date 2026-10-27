@@ -35,6 +35,7 @@ const myRowSafe = (): number[] | undefined => {
 export const MatchHud = () => {
   const go = useAppStore((state) => state.go);
   const screen = useAppStore((state) => state.screen);
+  const spectator = useAppStore((state) => state.spectator);
   const settings = useAppStore((state) => state.settings);
   const coarse = window.matchMedia("(pointer: coarse)").matches;
   const hotkeys =
@@ -54,12 +55,14 @@ export const MatchHud = () => {
       <TeamPortraits />
       <SkyTimer />
       <FuelGauge />
-      <div className="bottom-bar">
-        <EnergyMeter />
-        <XPBar />
-        <BuildPad hotkeys={hotkeys} />
-        <AbilityButton hotkeys={hotkeys} />
-      </div>
+      {!spectator && (
+        <div className="bottom-bar">
+          <EnergyMeter />
+          <XPBar />
+          <BuildPad hotkeys={hotkeys} />
+          <AbilityButton hotkeys={hotkeys} />
+        </div>
+      )}
       <button
         aria-label="Pause and settings"
         className="corner-btn pause-btn"
@@ -68,9 +71,9 @@ export const MatchHud = () => {
       >
         Menu
       </button>
-      <LevelUpOverlay />
-      <DownedOverlay />
-      {!hotkeys && <TouchControls onInput={dispatchInput} />}
+      {!spectator && <LevelUpOverlay />}
+      {!spectator && <DownedOverlay />}
+      {!hotkeys && !spectator && <TouchControls onInput={dispatchInput} />}
       {screen === "spectate" && <SpectateOverlay />}
     </div>
   );

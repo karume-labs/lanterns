@@ -41,9 +41,13 @@ interface AppState {
   /** Low-frequency network state - snapshots never land here. */
   room: RoomState | null;
   playerId: string | null;
+  /** true while watching a match instead of playing it */
+  spectator: boolean;
   status: ConnectionStatus;
   latency: number;
   error: string;
+  /** machine code behind the last error, for targeted recovery offers */
+  errorCode: string;
   stats: MatchStats | null;
   levelUp: { choices: UpgradeChoice[]; level: number } | null;
   go: (screen: ScreenName) => void;
@@ -53,9 +57,10 @@ interface AppState {
   completeTutorial: (step: string) => void;
   setRoom: (room: RoomState | null) => void;
   setPlayerId: (playerId: string | null) => void;
+  setSpectator: (spectator: boolean) => void;
   setStatus: (status: ConnectionStatus) => void;
   setLatency: (latency: number) => void;
-  setError: (error: string) => void;
+  setError: (error: string, code?: string) => void;
   setStats: (stats: MatchStats | null) => void;
   setLevelUp: (
     levelUp: { choices: UpgradeChoice[]; level: number } | null,
@@ -77,9 +82,11 @@ export const useAppStore = create<AppState>((set) => ({
   showTouchHint: false,
   room: null,
   playerId: null,
+  spectator: false,
   status: "connecting",
   latency: 0,
   error: "",
+  errorCode: "",
   stats: null,
   levelUp: null,
   go: (screen) => set((state) => ({ previousScreen: state.screen, screen })),
@@ -116,9 +123,10 @@ export const useAppStore = create<AppState>((set) => ({
     }),
   setRoom: (room) => set({ room }),
   setPlayerId: (playerId) => set({ playerId }),
+  setSpectator: (spectator) => set({ spectator }),
   setStatus: (status) => set({ status }),
   setLatency: (latency) => set({ latency }),
-  setError: (error) => set({ error }),
+  setError: (error, code = "") => set({ error, errorCode: code }),
   setStats: (stats) => set({ stats }),
   setLevelUp: (levelUp) => set({ levelUp }),
 }));

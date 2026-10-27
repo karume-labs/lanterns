@@ -57,6 +57,11 @@ export class GameSocket {
     this.#send({ type: "join-room", code, name });
   }
 
+  /** Watch a match already in progress without playing in it. */
+  watchRoom(code: string, name: string): void {
+    this.#send({ type: "watch-room", code, name });
+  }
+
   leaveRoom(): void {
     this.#send({ type: "leave-room" });
     this.forgetToken();

@@ -10,6 +10,7 @@ export const leaveRoom = (): void => {
   store.setStats(null);
   store.setLevelUp(null);
   store.setPlayerId(null);
+  store.setSpectator(false);
   setRoomRef(null);
   setPlayerIdRef(null);
   store.go("menu");
@@ -26,6 +27,7 @@ export const dropRoomLocally = (): void => {
   store.setStats(null);
   store.setLevelUp(null);
   store.setPlayerId(null);
+  store.setSpectator(false);
   setRoomRef(null);
   setPlayerIdRef(null);
   store.go("menu");
