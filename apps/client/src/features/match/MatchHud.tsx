@@ -1,4 +1,5 @@
 import { PLAYER_FLAG } from "@lanterns/domain";
+import { useEffect } from "react";
 import { useAppStore } from "../../app/store";
 import { AbilityButton, BuildPad } from "../../components/hud/BuildAbility";
 import { SkyTimer } from "../../components/hud/SkyTimer";
@@ -39,6 +40,14 @@ export const MatchHud = () => {
   const hotkeys =
     settings.scheme !== "touch" && !(settings.scheme === "auto" && coarse);
   useVitalsClasses();
+
+  // Leaving the match must not leave the red border behind on the menu.
+  useEffect(
+    () => () => {
+      document.body.classList.remove("downed-vignette", "low-hp-vignette");
+    },
+    [],
+  );
 
   return (
     <div className="match-hud screen-enter">
