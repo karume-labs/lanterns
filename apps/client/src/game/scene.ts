@@ -11,6 +11,7 @@ import {
 } from "@lanterns/domain";
 import type { Container } from "pixi.js";
 import { Camera } from "./camera";
+import { FxTracker } from "./fx";
 import { Interpolator } from "./interpolator";
 import { LocalPlayer } from "./local-player";
 import { Painter } from "./painter";
@@ -28,12 +29,14 @@ export class Scene {
   readonly #camera = new Camera();
   readonly #local = new LocalPlayer();
   readonly #interp = new Interpolator();
+  readonly #fx = new FxTracker();
   readonly #painter: Painter;
   #lastSnapT = -1;
   #lastRoomKey = "";
 
   constructor(stage: Container) {
     this.#painter = new Painter(stage);
+    stage.addChild(this.#fx.container);
   }
 
   update(dt: number, view: FrameView): void {
@@ -46,12 +49,16 @@ export class Scene {
     if (roomKey !== this.#lastRoomKey) {
       this.#lastRoomKey = roomKey;
       this.#interp.clear();
+      this.#fx.clear();
       this.#lastSnapT = -1;
       this.#local.invalidate();
     }
     if (snap && snap.t !== this.#lastSnapT) {
       this.#lastSnapT = snap.t;
       this.#interp.push(snap);
+      this.#fx.ingest(snap.ev);
+      for (const event of snap.ev)
+        if (event.k === "shake") this.#camera.addShake(event.n);
       this.#reconcile(room, snap, playerId);
     }
 
@@ -75,6 +82,7 @@ export class Scene {
       ? this.#local.position
       : { x: bounds.width / 2, y: bounds.height / 2 };
     this.#camera.update(target, bounds, dt);
+    this.#fx.update(dt);
 
     this.#painter.draw({
       room,
@@ -85,6 +93,7 @@ export class Scene {
       moving,
       bounds,
       hub,
+      fx: this.#fx,
     });
   }
 

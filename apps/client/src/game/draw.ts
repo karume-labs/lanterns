@@ -5,7 +5,9 @@ import {
   type Vector2,
 } from "@lanterns/domain";
 import type { Graphics } from "pixi.js";
+import { ENEMY_ART, LANTERN_ART, TURRET_ART, WALL_ART } from "./art";
 import { COLORS, TILE } from "./config";
+import { drawPixels } from "./pixels";
 
 const hex = (value: number): string => value.toString(16).padStart(6, "0");
 const mixHex = (a: number, b: number, t: number): number => {
@@ -20,6 +22,10 @@ const mixHex = (a: number, b: number, t: number): number => {
   const value = (blend(ar, br) << 16) | (blend(ag, bg) << 8) | blend(ab, bb);
   return Number.parseInt(hex(value), 16);
 };
+
+/** Enemy table colors are hex strings; pixel palettes need numbers. */
+const toColor = (value: string): number =>
+  Number.parseInt(value.replace(/^#/, ""), 16);
 
 export const skyColor = (elapsedSeconds: number, active: boolean): number =>
   active
@@ -59,10 +65,20 @@ export const drawLantern = (
     color: COLORS.lantern,
     alpha: 0.06,
   });
-  g.circle(position.x, position.y, 30)
-    .fill({ color: COLORS.ink })
-    .stroke({ width: 3, color: COLORS.twilight });
-  g.circle(position.x, position.y, 14).fill({ color: COLORS.lantern });
+  drawPixels(
+    g,
+    position.x,
+    position.y,
+    LANTERN_ART,
+    {
+      "0": COLORS.night,
+      e: COLORS.ember,
+      E: COLORS.lantern,
+      g: COLORS.twilight,
+      w: COLORS.lantern,
+    },
+    4,
+  );
   g.rect(position.x - 24, position.y - 34, 48, 6)
     .fill({ color: COLORS.ink })
     .stroke({ width: 1, color: COLORS.twilight });
@@ -77,8 +93,16 @@ export const drawEnemies = (g: Graphics, rows: number[][]): void => {
     const def = ENEMIES_TABLE[kind];
     const x = row[0] ?? 0;
     const y = row[1] ?? 0;
-    g.circle(x, y, def.radius).fill({ color: def.color });
-    g.circle(x, y, def.radius).stroke({ width: 1, color: COLORS.night });
+    const art = ENEMY_ART[kind];
+    const scale = Math.max(2, Math.round((def.radius * 2) / art.length));
+    drawPixels(
+      g,
+      x,
+      y,
+      art,
+      { "0": COLORS.night, c: toColor(def.color), w: 0xffffff },
+      scale,
+    );
     const hpRatio = Math.max(0, (row[3] ?? def.maxHealth) / def.maxHealth);
     if (hpRatio < 1)
       g.rect(x - 10, y - def.radius - 7, 20, 3)
@@ -94,14 +118,9 @@ export const drawConstructs = (g: Graphics, rows: number[][]): void => {
     const x = Math.round(row[0] ?? 0);
     const y = Math.round(row[1] ?? 0);
     if (wall) {
-      g.rect(x - 16, y - 16, 32, 32)
-        .fill({ color: COLORS.twilight })
-        .stroke({ width: 2, color: COLORS.night });
+      drawPixels(g, x, y, WALL_ART, { b: COLORS.twilight, m: COLORS.night }, 4);
     } else {
-      g.circle(x, y, 14)
-        .fill({ color: COLORS.moss })
-        .stroke({ width: 2, color: COLORS.night });
-      g.rect(x - 2, y - 22, 4, 12).fill({ color: COLORS.night });
+      drawPixels(g, x, y, TURRET_ART, { "0": COLORS.night, c: COLORS.moss }, 3);
     }
   }
 };

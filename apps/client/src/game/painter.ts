@@ -18,6 +18,7 @@ import {
   skyColor,
 } from "./draw";
 import { drawPlayerNames } from "./draw-labels";
+import type { FxTracker } from "./fx";
 import type { SampledState } from "./interpolator";
 import { lerpRows } from "./interpolator";
 import { LabelLayer } from "./labels";
@@ -43,6 +44,7 @@ export interface PainterFrame {
   moving: boolean;
   bounds: Bounds;
   hub: boolean;
+  fx: FxTracker;
 }
 
 /** Owns every Graphics/Text object; Scene decides what goes in each frame. */
@@ -108,6 +110,7 @@ export class Painter {
       .rect(0, 0, VIEW_W, VIEW_H)
       .fill({ color: 0x000000, alpha: active ? 0.3 : 0 });
     drawPlayerNames(this.#labels, frame);
+    frame.fx.render(camera);
   }
 
   #drawPlayers(frame: PainterFrame, paint: Graphics): void {
