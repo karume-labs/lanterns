@@ -28,7 +28,7 @@ defend a central lantern through a ten-minute night.
 3. Authoritative fixed-tick match: movement, aiming, shooting, energy pool,
    walls and turrets, four enemy types driven by a wave table, downed state and
    revives, lantern fuel/light radius, fuel shards, shared XP with three-choice
-   level-ups, four role abilities, win at dawn, loss on dark lantern or
+   level-ups, six role abilities, win at dawn, loss on dark lantern or
    all players down, end screen with per-player stats.
 4. Networking: validated client commands, compact snapshots at fixed cadence,
    client interpolation of remote entities, local-player reconciliation,
@@ -64,8 +64,8 @@ defend a central lantern through a ten-minute night.
 ## Non-goals / explicitly deferred
 
 Accounts, matchmaking, chat, persistent progression, spectator mode, best-time
-leaderboard, the Keeper support role, and a final boss are out of scope until
-the core exit criteria are met.
+leaderboard, and a final boss are out of scope until the core exit criteria
+are met.
 
 ## Technical requirements
 
