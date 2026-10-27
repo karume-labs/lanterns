@@ -4,6 +4,7 @@ import type { Role, Vector2 } from "../types";
 export type ClientMessage =
   | { type: "create-room"; name: string }
   | { type: "join-room"; code: string; name: string }
+  | { type: "watch-room"; code: string; name: string }
   | { type: "rejoin-room"; token: string }
   | { type: "leave-room" }
   | { type: "input"; input: InputState }
@@ -17,6 +18,7 @@ export type ClientMessage =
 export const CLIENT_MESSAGE_TYPES = [
   "create-room",
   "join-room",
+  "watch-room",
   "rejoin-room",
   "leave-room",
   "input",

@@ -9,6 +9,8 @@ export type ServerMessage =
       reconnectToken: string;
       roomCode: string;
       protocol: number;
+      /** set when the client joined as a mid-match spectator */
+      spectator?: boolean;
     }
   | { type: "room-state"; room: RoomState }
   | { type: "snapshot"; snap: Snapshot }
