@@ -15,6 +15,22 @@ export const leaveRoom = (): void => {
   store.go("menu");
 };
 
+/**
+ * A reconnect found no room left (server restarted, room expired): drop the
+ * local room state so the player lands on the menu instead of a dead match.
+ */
+export const dropRoomLocally = (): void => {
+  getSocket()?.forgetToken();
+  const store = useAppStore.getState();
+  store.setRoom(null);
+  store.setStats(null);
+  store.setLevelUp(null);
+  store.setPlayerId(null);
+  setRoomRef(null);
+  setPlayerIdRef(null);
+  store.go("menu");
+};
+
 /** Host path back to the hub after a finished match. */
 export const returnToLobby = (): void => {
   getSocket()?.returnToLobby();

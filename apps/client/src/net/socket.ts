@@ -59,6 +59,11 @@ export class GameSocket {
 
   leaveRoom(): void {
     this.#send({ type: "leave-room" });
+    this.forgetToken();
+  }
+
+  /** Drop the stored identity without messaging the server (room is gone). */
+  forgetToken(): void {
     this.#reconnectToken = null;
     localStorage.removeItem(RECONNECT_TOKEN_KEY);
     localStorage.removeItem(PLAYER_ID_KEY);

@@ -20,7 +20,7 @@ export interface SocketHandlers {
   onLevelUp: (choices: UpgradeChoice[], level: number) => void;
   onMatchEnded: (stats: MatchStats) => void;
   onNotice: (message: string) => void;
-  onError: (message: string) => void;
+  onError: (message: string, code?: string) => void;
   onLatency: (ms: number) => void;
   onWelcome: (playerId: string, roomCode: string) => void;
 }

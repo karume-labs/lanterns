@@ -43,7 +43,7 @@ export const routeServerMessage = (
       handlers.onLatency(Math.round(performance.now() - message.sentAt));
       return;
     case "error":
-      handlers.onError(message.message);
+      handlers.onError(message.message, message.code);
       return;
   }
 };

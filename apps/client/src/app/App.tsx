@@ -20,6 +20,7 @@ import { setInputSink } from "../input/current-input";
 import { closeConnection, openConnection } from "../net/connection";
 import { BaseScreen } from "./BaseScreen";
 import { OverlayScreens } from "./OverlayScreens";
+import { dropRoomLocally } from "./room-actions";
 import { useAppStore } from "./store";
 
 const EVENT_TEXT: Partial<Record<RoomEvent, string>> = {
@@ -52,8 +53,11 @@ export const App = () => {
         useAppStore.getState().setLevelUp({ choices, level }),
       onMatchEnded: (stats) => useAppStore.getState().setStats(stats),
       onNotice: (message) => useAppStore.getState().toast(message),
-      onError: (message) => {
-        useAppStore.getState().setError(message);
+      onError: (message, code) => {
+        const store = useAppStore.getState();
+        // The room died while we were away: back to the menu, not a dead HUD.
+        if (code === "rejoin-failed") dropRoomLocally();
+        store.setError(message);
         window.setTimeout(() => useAppStore.getState().setError(""), 5000);
       },
       onLatency: (ms) => useAppStore.getState().setLatency(ms),
