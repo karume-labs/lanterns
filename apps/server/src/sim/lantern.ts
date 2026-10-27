@@ -1,13 +1,15 @@
 import {
+  BEACON_RADIUS_MULT,
   LANTERN_FUEL_DRAIN_PER_SEC,
   LANTERN_MAX_FUEL,
   LANTERN_RADIUS_MAX,
   LANTERN_RADIUS_MIN,
+  LUMEN_RADIUS_MULT,
   MATCH_DURATION_SECONDS,
   MAX_ENEMIES_PER_ROOM,
   type RoomState,
 } from "@lanterns/domain";
-import { SIM_DT } from "./runtime";
+import { SIM_DT, type SimRuntime } from "./runtime";
 
 export const finish = (state: RoomState, outcome: "won" | "lost"): void => {
   if (state.phase !== "active") return;
@@ -16,17 +18,32 @@ export const finish = (state: RoomState, outcome: "won" | "lost"): void => {
 };
 
 /** Drain the lantern, refresh its light, and evaluate win/loss. */
-export const stepLantern = (state: RoomState): void => {
+export const stepLantern = (
+  state: RoomState,
+  rt: SimRuntime,
+  now: number,
+): void => {
   const lantern = state.lantern;
   if (!lantern) return;
   lantern.fuel = Math.max(
     0,
     lantern.fuel - LANTERN_FUEL_DRAIN_PER_SEC * SIM_DT,
   );
-  lantern.lightRadius =
+  const base =
     LANTERN_RADIUS_MIN +
     (lantern.fuel / LANTERN_MAX_FUEL) *
       (LANTERN_RADIUS_MAX - LANTERN_RADIUS_MIN);
+  // A standing Lumen carries light farther; Beacon flares it wider still.
+  const lumenLight = state.players.some(
+    (player) => player.connected && !player.downed && player.role === "lumen",
+  )
+    ? LUMEN_RADIUS_MULT
+    : 1;
+  const beacon = now < rt.beaconUntil ? BEACON_RADIUS_MULT : 1;
+  lantern.lightRadius = Math.min(
+    LANTERN_RADIUS_MAX,
+    base * lumenLight * beacon,
+  );
 
   if (state.elapsedSeconds >= MATCH_DURATION_SECONDS) {
     finish(state, "won");

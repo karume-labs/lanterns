@@ -2,6 +2,7 @@ import {
   distance,
   LANTERN_MAX_FUEL,
   LANTERN_POSITION,
+  ROLES_TABLE,
   type RoomState,
   SHARD_COLLECT_RADIUS,
   SHARD_DEPOSIT_RADIUS,
@@ -23,7 +24,8 @@ export const stepShards = (state: RoomState, rt: SimRuntime): void => {
       }
       shard.position = holder.position;
       if (distance(shard.position, LANTERN_POSITION) <= SHARD_DEPOSIT_RADIUS) {
-        const gained = Math.round(shard.value * harvest);
+        const fuelMult = holder.role ? ROLES_TABLE[holder.role].mods.fuel : 1;
+        const gained = Math.round(shard.value * harvest * fuelMult);
         if (state.lantern)
           state.lantern.fuel = Math.min(
             LANTERN_MAX_FUEL,

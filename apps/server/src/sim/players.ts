@@ -73,7 +73,12 @@ export const stepPlayers = (
 
     const cooldown = shotCooldownMs(player.role, stacks(rt, "reload"));
     const lastShot = rt.lastShotAt.get(player.id) ?? -1e9;
-    if (input.shooting && now - lastShot >= cooldown) {
+    // Keepers never fire; their kit is fuel, mending, and the ward.
+    if (
+      input.shooting &&
+      player.role !== "keeper" &&
+      now - lastShot >= cooldown
+    ) {
       rt.lastShotAt.set(player.id, now);
       fireShot(state, rt, player);
     }

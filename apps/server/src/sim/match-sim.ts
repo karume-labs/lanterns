@@ -23,6 +23,6 @@ export const stepMatch = (
   processDeaths(state, rt);
   stepRevives(state, rt, now);
   stepShards(state, rt);
-  stepLantern(state);
+  stepLantern(state, rt, now);
   prune(state, now);
 };

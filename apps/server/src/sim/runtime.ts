@@ -34,6 +34,8 @@ export interface SimRuntime {
   events: SnapshotEvent[];
   /** ms clock for the next spawn event */
   nextSpawnAt: number;
+  /** Lumen beacon: light stays wide until this ms timestamp */
+  beaconUntil: number;
   /** fixed tick counter since the room was created */
   tick: number;
   /** injectable randomness so headless tests are reproducible */
@@ -51,6 +53,7 @@ export const createRuntime = (rng: () => number = Math.random): SimRuntime => ({
   takenUpgrades: {},
   events: [],
   nextSpawnAt: 0,
+  beaconUntil: 0,
   tick: 0,
   rng,
   endedSent: false,
