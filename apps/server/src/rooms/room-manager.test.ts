@@ -1,0 +1,176 @@
+import { describe, expect, test } from "bun:test";
+import { COUNTDOWN_MS, HUB_CIRCLE, RECONNECT_GRACE_MS } from "@lanterns/domain";
+import { RoomError } from "./errors";
+import { createRoomManager } from "./room-manager";
+
+const T0 = 1_000_000;
+
+describe("room membership", () => {
+  test("creates a room and joins a second player by code", () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    const joined = manager.joinRoom(created.room.code, "p2", "Bob", "s2");
+    expect(joined.room.players).toHaveLength(2);
+    expect(joined.events[0]?.event).toBe("player-joined");
+    expect(manager.playerCount).toBe(2);
+  });
+
+  test("rejects unknown codes, duplicates, and a fifth player", () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    const code = created.room.code;
+    expect(() => manager.joinRoom("ZZZZZ", "pX", "X", "sX")).toThrow(RoomError);
+    expect(() => manager.joinRoom(code, "p1", "Alice", "s1")).toThrow(
+      RoomError,
+    );
+    manager.joinRoom(code, "p2", "Bob", "s2");
+    manager.joinRoom(code, "p3", "Cara", "s3");
+    manager.joinRoom(code, "p4", "Dan", "s4");
+    expect(() => manager.joinRoom(code, "p5", "Eve", "s5")).toThrow(RoomError);
+  });
+
+  test("claims are exclusive: one player per color role", () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    manager.joinRoom(created.room.code, "p2", "Bob", "s2");
+    manager.selectRole(created.room.code, "p1", "builder");
+    expect(() =>
+      manager.selectRole(created.room.code, "p2", "builder"),
+    ).toThrow(RoomError);
+    manager.selectRole(created.room.code, "p2", "medic");
+    expect(created.room.players[1]?.role).toBe("medic");
+  });
+
+  test("explicit leave removes the player and cleans up empty rooms", () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    const left = manager.leaveRoom("p1", "s1");
+    expect(left).toBeNull();
+    expect(manager.roomCount).toBe(0);
+  });
+
+  test("host role migrates when the host leaves", () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    manager.joinRoom(created.room.code, "p2", "Bob", "s2");
+    const left = manager.leaveRoom("p1", "s1");
+    expect(left?.events.some((event) => event.event === "host-changed")).toBe(
+      true,
+    );
+    expect(created.room.hostId).toBe("p2");
+  });
+});
+
+describe("countdown flow", () => {
+  const readyRoom = () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    const code = created.room.code;
+    manager.joinRoom(code, "p2", "Bob", "s2");
+    manager.selectRole(code, "p1", "builder");
+    manager.selectRole(code, "p2", "medic");
+    for (const player of created.room.players)
+      player.position = { x: HUB_CIRCLE.x, y: HUB_CIRCLE.y };
+    return { manager, code, room: created.room };
+  };
+
+  test("starts when everyone claims a role and stands in the circle", () => {
+    const { manager, code, room } = readyRoom();
+    const [result] = manager.tick(T0);
+    expect(result?.room.phase).toBe("countdown");
+    expect(
+      result?.events.some((event) => event.event === "countdown-started"),
+    ).toBe(true);
+    expect(room.countdownEndsAt).toBe(T0 + COUNTDOWN_MS);
+  });
+
+  test("cancels when a player disconnects mid-countdown", () => {
+    const { manager, code, room } = readyRoom();
+    manager.tick(T0);
+    expect(room.phase).toBe("countdown");
+    manager.disconnect(code, "p2", "s2", T0);
+    const [result] = manager.tick(T0 + 100);
+    expect(result?.room.phase).toBe("lobby");
+    expect(
+      result?.events.some((event) => event.event === "countdown-cancelled"),
+    ).toBe(true);
+  });
+
+  test("cancels when a late player joins mid-countdown", () => {
+    const { manager, code, room } = readyRoom();
+    manager.tick(T0);
+    manager.joinRoom(code, "p3", "Cara", "s3");
+    const [result] = manager.tick(T0 + 100);
+    expect(room.phase).toBe("lobby");
+    expect(
+      result?.events.some((event) => event.event === "countdown-cancelled"),
+    ).toBe(true);
+  });
+
+  test("begins the match when the countdown expires", () => {
+    const { manager, room } = readyRoom();
+    manager.tick(T0);
+    const [result] = manager.tick(T0 + COUNTDOWN_MS + 1);
+    expect(
+      result?.events.some((event) => event.event === "match-started"),
+    ).toBe(true);
+    expect(room.phase).toBe("active");
+    expect(room.lantern).not.toBeNull();
+    expect(room.players.every((player) => player.health === 100)).toBe(true);
+  });
+
+  test("host-only start, and only when everyone is ready", () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    const code = created.room.code;
+    manager.selectRole(code, "p1", "builder");
+    expect(() => manager.requestStart(code, "p1", T0)).toThrow(RoomError);
+    const host = created.room.players[0];
+    if (!host) throw new Error("missing host");
+    host.position = { x: HUB_CIRCLE.x, y: HUB_CIRCLE.y };
+    manager.joinRoom(code, "p2", "Bob", "s2");
+    expect(() => manager.requestStart(code, "p2", T0)).toThrow(RoomError);
+    expect(() => manager.requestStart(code, "p1", T0)).toThrow(RoomError);
+  });
+});
+
+describe("reconnect handling", () => {
+  test("disconnect keeps an idle post that the token can reclaim", () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    const code = created.room.code;
+    manager.disconnect(code, "p1", "s1", T0);
+    expect(created.room.players[0]?.connected).toBe(false);
+    expect(manager.tick(T0 + 1000)[0]?.room.players).toHaveLength(1);
+
+    const rejoined = manager.rejoinRoom(created.token, "s9");
+    expect(rejoined.playerId).toBe("p1");
+    expect(rejoined.events[0]?.event).toBe("player-reconnected");
+    expect(created.room.players[0]?.connected).toBe(true);
+  });
+
+  test("idle posts expire after the grace window and their tokens die", () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    const code = created.room.code;
+    const joined = manager.joinRoom(code, "p2", "Bob", "s2");
+    manager.disconnect(code, "p2", "s2", T0);
+    const [result] = manager.tick(T0 + RECONNECT_GRACE_MS + 1);
+    expect(result?.room.players).toHaveLength(1);
+    expect(result?.events.some((event) => event.event === "player-left")).toBe(
+      true,
+    );
+    expect(() => manager.rejoinRoom(joined.token, "s9")).toThrow(RoomError);
+  });
+
+  test("a stale socket close does not mark the reclaimed player offline", () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    const code = created.room.code;
+    manager.disconnect(code, "p1", "s1", T0);
+    manager.rejoinRoom(created.token, "s2");
+    const stale = manager.disconnect(code, "p1", "s1", T0 + 5);
+    expect(stale).toBeNull();
+    expect(created.room.players[0]?.connected).toBe(true);
+  });
+});
