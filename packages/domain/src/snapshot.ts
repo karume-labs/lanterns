@@ -16,6 +16,7 @@ export type SnapshotEvent =
   | { k: "revived"; p: number }
   | { k: "placed"; c: number }
   | { k: "fuel"; n: number }
+  | { k: "flare" }
   | { k: "shake"; n: number };
 
 export interface Snapshot {

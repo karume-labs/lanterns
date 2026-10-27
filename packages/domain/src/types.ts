@@ -12,7 +12,14 @@ export interface Bounds {
   height: number;
 }
 
-export const ROLES = ["builder", "medic", "striker", "scout"] as const;
+export const ROLES = [
+  "builder",
+  "medic",
+  "striker",
+  "scout",
+  "keeper",
+  "lumen",
+] as const;
 export type Role = (typeof ROLES)[number];
 
 export const ENEMY_KINDS = ["swarmer", "tank", "ranged", "chaser"] as const;

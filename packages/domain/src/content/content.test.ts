@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { MATCH_DURATION_SECONDS, UPGRADE_MAX_STACKS } from "../constants";
 import { ENEMY_KINDS, ROLES } from "../types";
 import { ENEMIES_TABLE } from "./enemies";
-import { ROLES_TABLE } from "./roles";
+import { ROLE_ORDER, ROLES_TABLE } from "./roles";
 import {
   findUpgrade,
   remainingStacks,
@@ -22,6 +22,11 @@ function seededRng(seed: number): () => number {
 describe("roles table", () => {
   test("covers every role exactly once", () => {
     expect(Object.keys(ROLES_TABLE).sort()).toEqual([...ROLES].sort());
+  });
+
+  test("rack order lists every role exactly once", () => {
+    expect([...ROLE_ORDER].sort()).toEqual([...ROLES].sort());
+    expect(new Set(ROLE_ORDER).size).toBe(ROLES.length);
   });
 
   test("each role has a distinct color and a unique ability", () => {

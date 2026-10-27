@@ -1,5 +1,7 @@
 import type { Role } from "../types";
 
+import { BASE_ROLES } from "./base-roles";
+
 export interface RoleDef {
   id: Role;
   label: string;
@@ -21,86 +23,60 @@ export interface RoleDef {
     constructHealth: number;
     constructCost: number;
     reviveSpeed: number;
+    /** Fuel deposit multiplier (Keeper banks more per shard). */
+    fuel: number;
   };
 }
 
 export const ROLES_TABLE: Record<Role, RoleDef> = {
-  builder: {
-    id: "builder",
-    label: "Builder",
-    color: "#5bc0eb",
-    accent: "#a5e3ff",
-    pitch: "Cheaper, sturdier constructs",
-    abilityId: "bulwark",
-    abilityName: "Bulwark",
-    abilityDesc: "Erect a free wall in front of you.",
-    abilityCost: 30,
+  ...BASE_ROLES,
+  keeper: {
+    id: "keeper",
+    label: "Keeper",
+    color: "#ff8fd1",
+    accent: "#f2ecd8",
+    pitch: "Never fires - fuels the lantern and mends the crew",
+    abilityId: "ward",
+    abilityName: "Ward",
+    abilityDesc: "Raise a small shield that fades quickly.",
+    abilityCost: 25,
     mods: {
       damage: 1,
-      speed: 1,
+      speed: 0.95,
       fireRate: 1,
-      constructHealth: 1.5,
-      constructCost: 0.75,
-      reviveSpeed: 1,
+      constructHealth: 1.3,
+      constructCost: 0.9,
+      reviveSpeed: 1.35,
+      fuel: 1.5,
     },
   },
-  medic: {
-    id: "medic",
-    label: "Medic",
-    color: "#f284b6",
-    accent: "#ffc2dd",
-    pitch: "Healing pulse and faster revives",
-    abilityId: "mend",
-    abilityName: "Mend",
-    abilityDesc: "Heal every nearby player for 35.",
-    abilityCost: 40,
-    mods: {
-      damage: 1,
-      speed: 1,
-      fireRate: 1,
-      constructHealth: 1,
-      constructCost: 1,
-      reviveSpeed: 1.6,
-    },
-  },
-  striker: {
-    id: "striker",
-    label: "Striker",
-    color: "#f95738",
-    accent: "#ffb199",
-    pitch: "Heavy damage up close",
-    abilityId: "flare",
-    abilityName: "Flare",
-    abilityDesc: "Burst of damage to everything nearby.",
-    abilityCost: 50,
-    mods: {
-      damage: 1.35,
-      speed: 1,
-      fireRate: 1,
-      constructHealth: 1,
-      constructCost: 1,
-      reviveSpeed: 1,
-    },
-  },
-  scout: {
-    id: "scout",
-    label: "Scout",
-    color: "#b8de6f",
-    accent: "#e2ffb8",
-    pitch: "Fast, and pulls fuel shards",
-    abilityId: "glimmer",
-    abilityName: "Glimmer",
-    abilityDesc: "Pull loose fuel shards toward you.",
+  lumen: {
+    id: "lumen",
+    label: "Lumen",
+    color: "#c8a2ff",
+    accent: "#ff9ec2",
+    pitch: "Carries the light farther into the dark",
+    abilityId: "beacon",
+    abilityName: "Beacon",
+    abilityDesc: "Flare the lantern: wider light for a breath.",
     abilityCost: 35,
     mods: {
       damage: 1,
-      speed: 1.15,
+      speed: 1,
       fireRate: 1,
       constructHealth: 1,
       constructCost: 1,
       reviveSpeed: 1,
+      fuel: 1,
     },
   },
 };
 
-export const ROLE_ORDER: Role[] = ["builder", "medic", "striker", "scout"];
+export const ROLE_ORDER: Role[] = [
+  "builder",
+  "medic",
+  "striker",
+  "scout",
+  "keeper",
+  "lumen",
+];

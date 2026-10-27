@@ -74,6 +74,10 @@ export const UPGRADE_MAX_STACKS = 3;
 
 // Abilities
 export const ABILITY_GLOBAL_COOLDOWN_MS = 1500;
+export const WARD_LIFETIME_MS = 15_000;
+export const BEACON_DURATION_MS = 8000;
+export const BEACON_RADIUS_MULT = 1.6;
+export const LUMEN_RADIUS_MULT = 1.35;
 
 // Hub layout (pre-match roamable area)
 export const HUB_SIZE = { width: 1440, height: 900 } as const;
