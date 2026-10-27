@@ -75,5 +75,6 @@ export const damagePlayer = (
   player.reviveProgress = 0;
   player.reviveTargetId = null;
   rt.events.push({ k: "down", p: state.players.indexOf(player) });
-  rt.events.push({ k: "shake", n: 8 });
+  // A down is felt, not a quake: keep the kick well under the camera clamp.
+  rt.events.push({ k: "shake", n: 4 });
 };
