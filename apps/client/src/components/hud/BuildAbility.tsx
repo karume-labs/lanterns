@@ -1,4 +1,4 @@
-import { ABILITY_GLOBAL_COOLDOWN_MS, type InputState } from "@lanterns/domain";
+import type { InputState } from "@lanterns/domain";
 import { useRef } from "react";
 import { useAppStore } from "../../app/store";
 import { useHudFrame } from "../../hooks/useHudFrame";
@@ -20,6 +20,9 @@ const pulse = (patch: Partial<InputState>): void => {
 interface BuildPadProps {
   hotkeys: boolean;
 }
+
+/** How long the ability ring flashes after a press. */
+const PRESS_FLASH_MS = 400;
 
 /** Wall (Q) and turret (E) build buttons with costs. */
 export const BuildPad = ({ hotkeys }: BuildPadProps) => {
@@ -49,7 +52,7 @@ export const BuildPad = ({ hotkeys }: BuildPadProps) => {
   );
 };
 
-/** Role ability with a cooldown ring drawn from local press timing. */
+/** Role ability with a press-feedback ring; energy alone gates recasts. */
 export const AbilityButton = ({ hotkeys }: BuildPadProps) => {
   const ring = useRef<HTMLSpanElement>(null);
   const lastPress = useRef(0);
@@ -66,7 +69,7 @@ export const AbilityButton = ({ hotkeys }: BuildPadProps) => {
     const node = ring.current;
     if (!node) return;
     const elapsed = performance.now() - lastPress.current;
-    const ratio = Math.max(0, 1 - elapsed / ABILITY_GLOBAL_COOLDOWN_MS);
+    const ratio = Math.max(0, 1 - elapsed / PRESS_FLASH_MS);
     node.style.setProperty("--cooldown", `${ratio * 360}deg`);
   };
   useHudFrame(update);

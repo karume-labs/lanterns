@@ -2,7 +2,7 @@ import type { InputState } from "@lanterns/domain";
 
 /**
  * Desktop input: WASD/arrows to move, pointer to aim, click to shoot,
- * Q/E to pick a construct, Space for the ability, F to interact.
+ * Q builds a wall, E builds a turret, Space casts the ability, F interacts.
  * Returns a detach function.
  */
 export const attachKeyboard = (
@@ -11,8 +11,16 @@ export const attachKeyboard = (
   const keys = new Set<string>();
   let aim = { x: 1, y: 0 };
   let shooting = false;
+  // One-shot intents: a press queues exactly one build or cast, and holding
+  // a key never repeats it (browser auto-repeat is ignored).
+  let placeEdge = false;
+  let abilityEdge = false;
 
-  const publish = () =>
+  const publish = () => {
+    const placeConstruct = placeEdge;
+    const useRoleAbility = abilityEdge;
+    placeEdge = false;
+    abilityEdge = false;
     onInput({
       moveX:
         (keys.has("d") || keys.has("arrowright") ? 1 : 0) -
@@ -24,15 +32,23 @@ export const attachKeyboard = (
       aimY: aim.y,
       shooting,
       selectedConstruct: keys.has("e") ? "turret" : "wall",
-      placeConstruct: keys.has("q"),
-      useRoleAbility: keys.has(" "),
+      placeConstruct,
+      useRoleAbility,
       interact: keys.has("f"),
     });
+  };
 
   const onKey = (pressed: boolean) => (event: KeyboardEvent) => {
     const key = event.key.toLowerCase();
-    if (pressed) keys.add(key);
-    else keys.delete(key);
+    if (pressed) {
+      keys.add(key);
+      if (!event.repeat) {
+        if (key === "q" || key === "e") placeEdge = true;
+        if (key === " ") abilityEdge = true;
+      }
+    } else {
+      keys.delete(key);
+    }
     if (key === " " || key.startsWith("arrow")) event.preventDefault();
     publish();
   };
