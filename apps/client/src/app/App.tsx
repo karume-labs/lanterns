@@ -7,6 +7,7 @@ import type {
 } from "@lanterns/domain";
 import { useEffect, useState } from "react";
 import { GameView } from "../game/GameView";
+import { useTouchMode } from "../hooks/use-touch-mode";
 import { setCurrentInput } from "../input/current-input";
 import { type ConnectionStatus, GameSocket } from "../net/socket";
 import { EndPanel } from "../ui/EndPanel";
@@ -14,6 +15,7 @@ import { Hud } from "../ui/Hud";
 import { LevelUpCards } from "../ui/LevelUpCards";
 import { LobbyPanel } from "../ui/LobbyPanel";
 import { MenuScreen } from "../ui/MenuScreen";
+import { SettingsButton } from "../ui/SettingsButton";
 import { TouchControls } from "../ui/TouchControls";
 
 export const App = () => {
@@ -28,6 +30,7 @@ export const App = () => {
   const [latency, setLatency] = useState(0);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [socket, setSocket] = useState<GameSocket | null>(null);
+  const touch = useTouchMode();
 
   useEffect(() => {
     const connection = new GameSocket({
@@ -81,6 +84,7 @@ export const App = () => {
           name={name}
           code={code}
           canSubmit={canSubmit}
+          isTouch={touch.enabled}
           onName={setName}
           onCode={setCode}
           onCreate={() => socket?.createRoom(name)}
@@ -112,7 +116,10 @@ export const App = () => {
           onPick={(upgradeId) => socket?.chooseUpgrade(upgradeId)}
         />
       )}
-      {room?.phase === "active" && <TouchControls onInput={sendInput} />}
+      {room?.phase === "active" && touch.enabled && (
+        <TouchControls onInput={sendInput} />
+      )}
+      <SettingsButton mode={touch.mode} onChange={touch.toggle} />
       {error && (
         <p className="error" role="alert">
           {error}

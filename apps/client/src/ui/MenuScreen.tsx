@@ -2,6 +2,7 @@ interface MenuScreenProps {
   name: string;
   code: string;
   canSubmit: boolean;
+  isTouch: boolean;
   onName: (value: string) => void;
   onCode: (value: string) => void;
   onCreate: () => void;
@@ -12,6 +13,7 @@ export const MenuScreen = ({
   name,
   code,
   canSubmit,
+  isTouch,
   onName,
   onCode,
   onCreate,
@@ -20,6 +22,11 @@ export const MenuScreen = ({
   <section className="panel menu" aria-live="polite">
     <h1>Lanterns</h1>
     <p>Gather your crew. Keep the light alive until dawn.</p>
+    <p className="howto">
+      {isTouch
+        ? "Left stick moves. Right stick aims and fires. A = ability, W/T = build, R = revive."
+        : "WASD moves. Mouse aims, click fires. Space = ability, Q = build wall, E = turret, F = revive."}
+    </p>
     <label>
       Display name
       <input
