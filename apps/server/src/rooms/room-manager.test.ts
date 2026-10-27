@@ -134,6 +134,29 @@ describe("countdown flow", () => {
   });
 });
 
+describe("match end", () => {
+  test("a finished run marks the room dirty so clients get the end state", () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    const code = created.room.code;
+    manager.selectRole(code, "p1", "builder");
+    const room = created.room;
+    const host = room.players[0];
+    if (!host) throw new Error("missing host");
+    host.position = { x: HUB_CIRCLE.x, y: HUB_CIRCLE.y };
+    manager.tick(T0);
+    manager.tick(T0 + COUNTDOWN_MS + 1);
+    expect(room.phase).toBe("active");
+    if (!room.lantern) throw new Error("lantern missing");
+
+    room.lantern.fuel = 0;
+    const [result] = manager.tick(T0 + COUNTDOWN_MS + 100);
+    expect(room.phase).toBe("lost");
+    expect(result?.roomState).toBe(true);
+    expect(result?.matchEnded?.outcome).toBe("lost");
+  });
+});
+
 describe("reconnect handling", () => {
   test("disconnect keeps an idle post that the token can reclaim", () => {
     const manager = createRoomManager();

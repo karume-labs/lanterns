@@ -20,6 +20,7 @@ export const tickRoom = (room: RuntimeRoom, now: number): TickResult | null => {
   let levelUp = room.pendingLevelUp;
   room.pendingLevelUp = false;
   room.rt.tick += 1;
+  const phaseAtStart = room.state.phase;
 
   // Expire idle posts past the reconnect grace window.
   for (const [playerId, since] of [...room.disconnectedAt]) {
@@ -74,7 +75,9 @@ export const tickRoom = (room: RuntimeRoom, now: number): TickResult | null => {
   }
   room.snapshotCounter += 1;
 
-  const roomState = room.dirty;
+  // The sim can flip active -> won/lost on its own; that transition must also
+  // reach clients, or they keep rendering the match HUD for a finished run.
+  const roomState = room.dirty || room.state.phase !== phaseAtStart;
   room.dirty = false;
   return {
     room: room.state,
