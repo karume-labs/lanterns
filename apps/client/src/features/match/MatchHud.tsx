@@ -12,6 +12,7 @@ import { dispatchInput } from "../../input/current-input";
 import { DownedOverlay } from "./DownedOverlay";
 import { myIndex } from "./frame-reads";
 import { LevelUpOverlay } from "./LevelUpOverlay";
+import { PausedBanner } from "./PausedBanner";
 import { SpectateOverlay } from "./SpectateOverlay";
 
 /** Set by the downed overlay's rAF check; drives the red vignette class. */
@@ -52,6 +53,7 @@ export const MatchHud = () => {
 
   return (
     <div className="match-hud screen-enter">
+      <PausedBanner />
       <TeamPortraits />
       <SkyTimer />
       <FuelGauge />

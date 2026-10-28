@@ -6,6 +6,7 @@ import type {
 } from "@lanterns/domain";
 import type { ConnectionStatus, SocketHandlers } from "./handlers";
 import { routeServerMessage } from "./route-message";
+import { serverUrl } from "./server-url";
 
 export type { ConnectionStatus, SocketHandlers };
 
@@ -94,6 +95,10 @@ export class GameSocket {
     this.#send({ type: "choose-upgrade", upgradeId });
   }
 
+  setPause(paused: boolean): void {
+    this.#send({ type: "pause-match", paused });
+  }
+
   placeConstruct(position: Vector2, kind?: "wall" | "turret"): void {
     this.#send({ type: "place-construct", position, kind });
   }
@@ -135,12 +140,3 @@ export class GameSocket {
     this.#retryTimer = window.setTimeout(() => this.connect(), delay);
   }
 }
-
-const serverUrl = (): string => {
-  const configured = import.meta.env.VITE_SERVER_URL;
-  if (configured) return configured;
-  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-  const host =
-    location.port === "5173" ? `${location.hostname}:3000` : location.host;
-  return `${protocol}//${host}/ws`;
-};

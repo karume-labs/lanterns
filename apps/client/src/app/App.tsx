@@ -17,6 +17,7 @@ import {
   setSnapRef,
 } from "../game/frame-refs";
 import { GameView } from "../game/GameView";
+import { useRoomPause } from "../hooks/use-room-pause";
 import { setInputSink } from "../input/current-input";
 import { closeConnection, openConnection } from "../net/connection";
 import { BaseScreen } from "./BaseScreen";
@@ -32,6 +33,8 @@ const EVENT_TEXT: Partial<Record<RoomEvent, string>> = {
   "countdown-cancelled": "Countdown cancelled - everyone to the circle.",
   "match-started": "The night begins!",
   "host-changed": "New host: the lantern listens to them now.",
+  "game-paused": "The room is paused — someone has the menu open.",
+  "game-resumed": "Back to it — the night moves again.",
 };
 
 /** Root shell: one socket, refs for frames, React only for real UI state. */
@@ -87,7 +90,9 @@ export const App = () => {
     });
     setInputSink((input) => {
       const store = useAppStore.getState();
-      if (store.room && !store.spectator) socket.sendInput(input);
+      // Frozen room: nothing to feed the sim until it resumes.
+      if (store.room && !store.spectator && !store.room.paused)
+        socket.sendInput(input);
     });
     return () => {
       setInputSink(null);
@@ -97,6 +102,7 @@ export const App = () => {
 
   const settings = useAppStore((state) => state.settings);
   const room = useAppStore((state) => state.room);
+  useRoomPause();
   useEffect(() => {
     setAudioSettings(settings);
   }, [settings]);

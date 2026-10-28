@@ -77,7 +77,9 @@ export class Scene {
       this.#lastSnapT > 0 &&
       !!me?.connected &&
       (flags & PLAYER_FLAG.downed) === 0;
-    if (moving) {
+    // A paused room freezes local prediction too, or the local sprite would
+    // drift away from the server's frozen position behind the menu.
+    if (moving && !room.paused) {
       const roleSpeed = me?.role ? ROLES_TABLE[me.role].mods.speed : 1;
       const speed = hub ? HUB_PLAYER_SPEED : PLAYER_SPEED * roleSpeed;
       this.#local.advance(dt, speed);

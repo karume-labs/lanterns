@@ -1049,6 +1049,42 @@ body.low-hp-vignette::after {
   text-align: center;
   width: calc(100% - 32px);
 }
+
+/* Room-paused banner: someone else holds the whole room still. */
+.paused-banner {
+  align-items: center;
+  animation: screen-in 200ms steps(6) both;
+  background: var(--night-ink);
+  border: 2px solid var(--lantern-amber);
+  color: var(--bone);
+  display: flex;
+  font-family: var(--font-body);
+  font-size: 11px;
+  gap: 8px;
+  left: 50%;
+  letter-spacing: 0.06em;
+  padding: 6px 12px;
+  position: fixed;
+  text-transform: uppercase;
+  top: calc(env(safe-area-inset-top, 0px) + 58px);
+  transform: translateX(-50%);
+  z-index: 40;
+}
+.paused-dot {
+  animation: paused-blink 1.2s steps(2) infinite;
+  background: var(--lantern-amber);
+  border-radius: 50%;
+  height: 8px;
+  width: 8px;
+}
+@keyframes paused-blink {
+  50% {
+    opacity: 0.2;
+  }
+}
+html.reduce-motion .paused-dot {
+  animation: none;
+}
 .credits-text {
   color: var(--fog);
   font-family: var(--font-body);
