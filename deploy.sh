@@ -54,9 +54,21 @@ print("latest deploy: {} - {}".format(deploy.get("id", "none"), deploy.get("stat
   exit 0
 fi
 
-deploy_id=$(curl -fsS "${auth[@]}" \
+# Trigger a deploy. Deliberately no curl -f here: on an API error the response
+# body (which explains why) would be swallowed before we can print it.
+post_body=$(curl -sS "${auth[@]}" \
   -X POST -H "Content-Type: application/json" -d '{"clear_cache": false}' \
-  "$API/services/$service_id/deploys" |
+  -w $'\n%{http_code}' "$API/services/$service_id/deploys") || {
+  echo "Could not reach the Render API." >&2
+  exit 1
+}
+http_code=$(printf '%s' "$post_body" | tail -n1)
+json=$(printf '%s' "$post_body" | sed '$d')
+if [ "$http_code" != "201" ] && [ "$http_code" != "202" ]; then
+  echo "Render API error (HTTP $http_code): $json" >&2
+  exit 1
+fi
+deploy_id=$(printf '%s' "$json" |
   python3 -c 'import json, sys; print(json.load(sys.stdin)["id"])')
 
 echo "Deploy: $deploy_id (checking every ${POLL_SECONDS}s, up to $MAX_POLLS times)"
