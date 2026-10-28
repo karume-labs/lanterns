@@ -39,6 +39,13 @@ export const LanternBackdrop = () => (
         }}
       />
     ))}
-    <span className="backdrop-lantern glow" />
+    <img
+      alt=""
+      aria-hidden="true"
+      className="backdrop-lantern glow"
+      height="40"
+      src="/lantern.svg"
+      width="31"
+    />
   </div>
 );

@@ -17,7 +17,14 @@ export const MenuScreen = () => {
     <div className="screen screen-enter">
       <LanternBackdrop />
       <div className="menu-logo">
-        <span aria-hidden="true" className="logo-emblem glow" />
+        <img
+          alt=""
+          aria-hidden="true"
+          className="logo-emblem glow"
+          height="56"
+          src="/lantern.svg"
+          width="44"
+        />
         <h1>Lanterns</h1>
         <p className="tagline">
           Gather your crew. Keep the light alive until dawn.

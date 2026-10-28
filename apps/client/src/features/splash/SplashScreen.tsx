@@ -29,7 +29,14 @@ export const SplashScreen = () => {
       onClick={light}
       type="button"
     >
-      <span className="splash-lantern pulse" aria-hidden="true" />
+      <img
+        alt=""
+        aria-hidden="true"
+        className="splash-lantern pulse"
+        height="72"
+        src="/lantern.svg"
+        width="56"
+      />
       <span className="splash-text">
         {coarse ? "Tap to light the lantern" : "Click to light the lantern"}
       </span>

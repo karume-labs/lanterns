@@ -297,11 +297,10 @@ button.danger {
   width: 100vw;
 }
 .splash-lantern {
-  background: var(--lantern-amber);
-  border: 6px solid var(--indigo);
-  box-shadow: 0 0 24px var(--lantern-amber);
   display: block;
+  filter: drop-shadow(0 0 24px rgba(255, 180, 58, 0.8));
   height: 72px;
+  image-rendering: pixelated;
   width: 56px;
 }
 .splash-text {
@@ -364,13 +363,13 @@ button.danger {
   }
 }
 .backdrop-lantern {
-  background: var(--lantern-amber);
-  border: 4px solid var(--indigo);
   bottom: 12vh;
+  filter: drop-shadow(0 0 14px rgba(255, 180, 58, 0.7));
   height: 40px;
-  left: calc(50% - 18px);
+  image-rendering: pixelated;
+  left: calc(50% - 15px);
   position: absolute;
-  width: 32px;
+  width: 31px;
 }
 .menu-logo {
   left: 50%;
@@ -381,11 +380,10 @@ button.danger {
   z-index: 10;
 }
 .logo-emblem {
-  background: var(--lantern-amber);
-  border: 5px solid var(--indigo);
   display: inline-block;
   height: 56px;
-  width: 40px;
+  image-rendering: pixelated;
+  width: 44px;
 }
 .tagline {
   color: var(--fog);
