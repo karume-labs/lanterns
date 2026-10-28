@@ -139,6 +139,78 @@ describe("countdown flow", () => {
   });
 });
 
+describe("whole-room pause", () => {
+  const activeRoom = () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    const code = created.room.code;
+    manager.joinRoom(code, "p2", "Bob", "s2");
+    manager.selectRole(code, "p1", "builder");
+    manager.selectRole(code, "p2", "medic");
+    for (const player of created.room.players)
+      player.position = { x: HUB_CIRCLE.x, y: HUB_CIRCLE.y };
+    manager.tick(T0); // lobby -> countdown
+    manager.tick(T0 + COUNTDOWN_MS + 1); // countdown -> active
+    expect(created.room.phase).toBe("active");
+    return { manager, code, room: created.room };
+  };
+
+  test("opening the menu freezes the clock for the whole room", () => {
+    const { manager, code, room } = activeRoom();
+    manager.tick(T0 + COUNTDOWN_MS + 2);
+    const frozenAt = room.elapsedSeconds;
+    expect(frozenAt).toBeGreaterThan(0);
+    manager.setPause(code, "p1", true, T0 + COUNTDOWN_MS + 3);
+    expect(room.paused).toBe(true);
+    manager.tick(T0 + COUNTDOWN_MS + 1_003);
+    manager.tick(T0 + COUNTDOWN_MS + 2_003);
+    expect(room.elapsedSeconds).toBe(frozenAt);
+    manager.setPause(code, "p1", false, T0 + COUNTDOWN_MS + 3_003);
+    expect(room.paused).toBe(false);
+    manager.tick(T0 + COUNTDOWN_MS + 4_003);
+    expect(room.elapsedSeconds).toBeGreaterThan(frozenAt);
+  });
+
+  test("stays paused until every requester closes the menu", () => {
+    const { manager, code, room } = activeRoom();
+    manager.setPause(code, "p1", true, T0 + 100);
+    manager.setPause(code, "p2", true, T0 + 150);
+    manager.setPause(code, "p1", false, T0 + 200);
+    expect(room.paused).toBe(true);
+    manager.setPause(code, "p2", false, T0 + 250);
+    expect(room.paused).toBe(false);
+  });
+
+  test("only a running match can be paused", () => {
+    const manager = createRoomManager();
+    const created = manager.createRoom("p1", "Alice", "s1");
+    expect(() => manager.setPause(created.room.code, "p1", true, T0)).toThrow(
+      RoomError,
+    );
+  });
+
+  test("leaving or disconnecting releases that player's pause", () => {
+    const { manager, code, room } = activeRoom();
+    manager.setPause(code, "p1", true, T0 + 100);
+    manager.setPause(code, "p2", true, T0 + 150);
+    manager.disconnect(code, "p1", "s1", T0 + 200);
+    expect(room.paused).toBe(true); // p2 still holds it
+    manager.leaveRoom("p2", "s2");
+    expect(room.paused).toBe(false);
+    expect(room.players).toHaveLength(1);
+  });
+
+  test("inputs are dropped while the room is frozen", () => {
+    const { manager, code, room } = activeRoom();
+    manager.setPause(code, "p1", true, T0 + 100);
+    const before = room.players[0]?.position.x ?? 0;
+    manager.setInput(code, "p1", { ...EMPTY_INPUT, moveX: 1 });
+    manager.tick(T0 + 1_100);
+    manager.tick(T0 + 2_100);
+    expect(room.players[0]?.position.x).toBe(before);
+  });
+});
+
 describe("match end", () => {
   test("a finished run marks the room dirty so clients get the end state", () => {
     const manager = createRoomManager();

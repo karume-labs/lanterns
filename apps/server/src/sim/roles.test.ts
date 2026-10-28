@@ -69,6 +69,7 @@ const makeState = (roles: Role[]): RoomState => ({
   nextXpThreshold: 60,
   upgradeChoices: [],
   winner: null,
+  paused: false,
 });
 
 const makeEnemy = (patch: Partial<Enemy>): Enemy => ({

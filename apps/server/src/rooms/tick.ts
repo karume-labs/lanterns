@@ -3,6 +3,7 @@ import { stepMatch } from "../sim/match-sim";
 import { updateCountdown } from "./countdown";
 import { removePlayer } from "./leaving";
 import { stepLobby } from "./lobby";
+import { gameClock, settlePause } from "./pause";
 import type { RuntimeRoom, TickResult } from "./runtime";
 import { buildSnapshot } from "./snapshot";
 import { buildStats } from "./stats";
@@ -30,14 +31,21 @@ export const tickRoom = (room: RuntimeRoom, now: number): TickResult | null => {
   }
   if (room.state.players.length === 0) return null;
 
-  // Simulate by phase.
+  // A pause released this tick (resume, leave, or grace expiry): bank the
+  // frozen span before any sim step reads the clock.
+  if (!room.state.paused) settlePause(room, now);
+
+  // Simulate by phase - unless the room is paused: the clock, enemies,
+  // spawning and movement all freeze together for everyone.
   const hadChoices = room.state.upgradeChoices.length > 0;
-  if (room.state.phase === "lobby" || room.state.phase === "countdown") {
-    stepLobby(room, now);
-    events.push(...updateCountdown(room, now));
-  } else if (room.state.phase === "active") {
-    stepMatch(room.state, room.rt, now);
-    if (!hadChoices && room.state.upgradeChoices.length) levelUp = true;
+  if (!room.state.paused) {
+    if (room.state.phase === "lobby" || room.state.phase === "countdown") {
+      stepLobby(room, now);
+      events.push(...updateCountdown(room, now));
+    } else if (room.state.phase === "active") {
+      stepMatch(room.state, room.rt, gameClock(room, now));
+      if (!hadChoices && room.state.upgradeChoices.length) levelUp = true;
+    }
   }
 
   // Ready transitions drive lobby room-state frames.

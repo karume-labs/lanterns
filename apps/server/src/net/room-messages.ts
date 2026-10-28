@@ -13,7 +13,8 @@ type RoomScopedMessage = Extract<
       | "start-match"
       | "return-lobby"
       | "choose-upgrade"
-      | "place-construct";
+      | "place-construct"
+      | "pause-match";
   }
 >;
 
@@ -24,6 +25,7 @@ const ROOM_SCOPED_TYPES = new Set<string>([
   "return-lobby",
   "choose-upgrade",
   "place-construct",
+  "pause-match",
 ]);
 
 export const isRoomScoped = (
@@ -85,6 +87,12 @@ export const dispatchRoomMessage = (
         message.position,
         message.kind,
         ctx.now,
+      );
+      return;
+    case "pause-match":
+      publishMutation(
+        ctx.server,
+        ctx.rooms.setPause(code, playerId, message.paused, ctx.now),
       );
       return;
   }

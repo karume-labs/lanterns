@@ -1,3 +1,4 @@
+import { releasePause } from "./pause";
 import type { RoomEventMsg, RuntimeRoom } from "./runtime";
 
 /** Remove a player and hand the host role to the next connected player. */
@@ -6,6 +7,7 @@ export const removePlayer = (
   playerId: string,
 ): RoomEventMsg[] => {
   const events: RoomEventMsg[] = [];
+  releasePause(room, playerId);
   const player = room.state.players.find(
     (candidate) => candidate.id === playerId,
   );
@@ -93,6 +95,8 @@ export const disconnect = (
   }
   room.sockets.delete(playerId);
   room.disconnectedAt.set(playerId, now);
+  // A closed lid must not hold the room hostage: their pause request goes too.
+  releasePause(room, playerId);
   const player = room.state.players.find(
     (candidate) => candidate.id === playerId,
   );

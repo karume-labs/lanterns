@@ -67,6 +67,7 @@ const makeState = (roles: Role[] = ["builder", "medic"]): RoomState => ({
   nextXpThreshold: 60,
   upgradeChoices: [],
   winner: null,
+  paused: false,
 });
 
 const setup = (

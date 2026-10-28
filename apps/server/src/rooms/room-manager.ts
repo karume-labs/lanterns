@@ -9,6 +9,7 @@ import {
 } from "./actions";
 import { createRoom, joinRoom, rejoinRoom } from "./joining";
 import { disconnect, leaveRoom } from "./leaving";
+import { setPause } from "./pause";
 import type { MutationResult, RuntimeRoom, TickResult } from "./runtime";
 import { tickRoom } from "./tick";
 import { watchRoom } from "./watching";
@@ -52,6 +53,12 @@ export interface RoomManager {
     code: string,
     playerId: string,
     upgradeId: string,
+  ): MutationResult;
+  setPause(
+    code: string,
+    playerId: string,
+    paused: boolean,
+    now: number,
   ): MutationResult;
   placeConstruct(
     code: string,
@@ -102,6 +109,8 @@ export const createRoomManager = (): RoomManager => {
       returnToLobby(rooms, code, playerId, now),
     chooseUpgrade: (code, playerId, upgradeId) =>
       pickUpgrade(rooms, code, playerId, upgradeId),
+    setPause: (code, playerId, paused, now) =>
+      setPause(rooms, code, playerId, paused, now),
     placeConstruct: (code, playerId, position, kind, now) =>
       place(rooms, code, playerId, position, kind, now),
     tick: (now) => {

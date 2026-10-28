@@ -5,6 +5,7 @@ import { chooseUpgrade } from "../sim/upgrades";
 import { allReady, beginCountdown, respawnAtHub } from "./countdown";
 import { RoomError } from "./errors";
 import { playerOf, roomOf } from "./lookup";
+import { gameClock } from "./pause";
 import type { MutationResult, RuntimeRoom } from "./runtime";
 
 type Rooms = ReadonlyMap<string, RuntimeRoom>;
@@ -19,6 +20,8 @@ export const setInput = (
   // Watchers receive snapshots but never drive a player: drop their input.
   if (room.spectators.has(playerId)) return;
   playerOf(room, playerId);
+  // Frozen room: inputs are dropped so nothing queues up for the resume.
+  if (room.state.paused) return;
   const normalized = normalizeInput(input);
   // Queue edge intents on receipt: they survive until a tick consumes them.
   if (normalized.useRoleAbility) room.rt.pendingAbility.add(playerId);
@@ -75,6 +78,11 @@ export const returnToLobby = (
   playerOf(room, playerId);
   if (room.state.phase !== "won" && room.state.phase !== "lost")
     throw new RoomError("wrong-phase", "The match has not finished yet.");
+  // Fresh run, fresh clock: accumulated pauses belong to the last match.
+  room.pauseBy.clear();
+  room.pauseStart = null;
+  room.pausedTotalMs = 0;
+  room.state.paused = false;
   endToLobby(room.state, room.rt, now);
   respawnAtHub(room);
   room.dirty = true;
@@ -112,6 +120,7 @@ export const place = (
 ): void => {
   const room = roomOf(rooms, code);
   const player = playerOf(room, playerId);
+  if (room.state.paused) return;
   const input = room.rt.inputs.get(playerId);
   placeAt(
     room.state,
@@ -119,6 +128,6 @@ export const place = (
     player,
     kind ?? input?.selectedConstruct ?? "wall",
     position,
-    now,
+    gameClock(room, now),
   );
 };

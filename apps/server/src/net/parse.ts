@@ -51,6 +51,10 @@ export const parseClientMessage = (raw: string): ClientMessage | null => {
       return typeof decoded.token === "string" && decoded.token.length > 8
         ? { type: "rejoin-room", token: decoded.token }
         : null;
+    case "pause-match":
+      return typeof decoded.paused === "boolean"
+        ? { type: "pause-match", paused: decoded.paused }
+        : null;
     case "input":
       return isValidInput(decoded.input)
         ? { type: "input", input: decoded.input }

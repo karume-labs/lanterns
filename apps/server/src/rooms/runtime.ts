@@ -53,6 +53,12 @@ export interface RuntimeRoom {
   pending: RoomEventMsg[];
   pendingLevelUp: boolean;
   snapshotCounter: number;
+  /** players who currently have the in-match menu open (pause requesters) */
+  pauseBy: Set<string>;
+  /** wall-clock ms when the current pause began, null while running */
+  pauseStart: number | null;
+  /** wall time already removed from the sim clock by past pauses */
+  pausedTotalMs: number;
 }
 
 export const createRuntimeRoom = (
@@ -73,6 +79,9 @@ export const createRuntimeRoom = (
   pending: [],
   pendingLevelUp: false,
   snapshotCounter: 0,
+  pauseBy: new Set(),
+  pauseStart: null,
+  pausedTotalMs: 0,
 });
 
 /** Initial room state for a brand-new room created by `hostId`. */
@@ -92,4 +101,5 @@ export const createRoomState = (code: string, player: Player): RoomState => ({
   nextXpThreshold: 60,
   upgradeChoices: [],
   winner: null,
+  paused: false,
 });
