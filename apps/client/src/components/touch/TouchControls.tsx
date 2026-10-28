@@ -53,28 +53,28 @@ export const TouchControls = ({ onInput }: TouchControlsProps) => {
           type="button"
           {...press({ useRoleAbility: true })}
         >
-          A
+          Ability
         </button>
         <button
           aria-label="Build wall"
           type="button"
           {...press({ selectedConstruct: "wall", placeConstruct: true })}
         >
-          W
+          Wall
         </button>
         <button
           aria-label="Build turret"
           type="button"
           {...press({ selectedConstruct: "turret", placeConstruct: true })}
         >
-          T
+          Turret
         </button>
         <button
           aria-label="Revive"
           type="button"
           {...press({ interact: true })}
         >
-          R
+          Revive
         </button>
       </div>
     </>

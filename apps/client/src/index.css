@@ -1106,9 +1106,13 @@ body.low-hp-vignette::after {
 }
 .touch-actions button {
   border-radius: 50%;
+  font-size: 10px;
   height: 56px;
+  line-height: 1.05;
   margin: 0;
   opacity: 0.9;
+  overflow-wrap: anywhere;
+  padding: 4px;
   width: 56px;
 }
 

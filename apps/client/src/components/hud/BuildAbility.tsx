@@ -1,6 +1,5 @@
 import type { InputState } from "@lanterns/domain";
 import { useRef } from "react";
-import { useAppStore } from "../../app/store";
 import { useHudFrame } from "../../hooks/useHudFrame";
 import { currentInput, dispatchInput } from "../../input/current-input";
 
@@ -56,9 +55,6 @@ export const BuildPad = ({ hotkeys }: BuildPadProps) => {
 export const AbilityButton = ({ hotkeys }: BuildPadProps) => {
   const ring = useRef<HTMLSpanElement>(null);
   const lastPress = useRef(0);
-  const scheme = useAppStore((state) => state.settings.scheme);
-  const coarse = window.matchMedia("(pointer: coarse)").matches;
-  const touch = scheme === "touch" || (scheme === "auto" && coarse);
 
   const press = (): void => {
     lastPress.current = performance.now();
@@ -84,7 +80,6 @@ export const AbilityButton = ({ hotkeys }: BuildPadProps) => {
     >
       <span aria-hidden="true" className="cooldown-ring" ref={ring} />
       <span>Ability</span>
-      {touch && <small className="num">A</small>}
     </button>
   );
 };

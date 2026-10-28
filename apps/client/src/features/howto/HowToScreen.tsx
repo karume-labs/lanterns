@@ -30,13 +30,13 @@ const PAGES: Page[] = [
   },
   {
     title: "Build",
-    touch: "W places a wall, T a turret, when you have energy.",
+    touch: "Tap Wall or Turret on the right when you have energy.",
     kbm: "Q builds a wall, E a turret.",
     demo: "demo-build",
   },
   {
     title: "Revive",
-    touch: "Hold the R button beside a downed friend.",
+    touch: "Hold Revive beside a downed friend.",
     kbm: "Hold F beside a downed friend.",
     demo: "demo-revive",
   },
