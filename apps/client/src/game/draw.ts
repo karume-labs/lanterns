@@ -94,7 +94,10 @@ export const drawEnemies = (g: Graphics, rows: number[][]): void => {
     const x = row[0] ?? 0;
     const y = row[1] ?? 0;
     const art = ENEMY_ART[kind];
-    const scale = Math.max(2, Math.round((def.radius * 2) / art.length));
+    // Even scale only: the world layer renders at 0.5x, so an odd scale
+    // lands art pixels on half-pixels and the sprite turns to mush.
+    const even = Math.round((def.radius * 2) / art.length / 2) * 2;
+    const scale = Math.max(2, even);
     drawPixels(
       g,
       x,
@@ -123,12 +126,12 @@ export const drawConstructs = (g: Graphics, rows: number[][]): void => {
       // The barrel art points up: turn it to the turret's aim (row[5]).
       const palette = { "0": COLORS.night, c: COLORS.moss };
       const aim = ((row[5] ?? 0) * Math.PI) / 180 + Math.PI / 2;
-      drawPixels(g, x, y + 4.5, TURRET_ART.slice(3), palette, 3);
+      drawPixels(g, x, y + 6, TURRET_ART.slice(3), palette, 4);
       const cos = Math.cos(aim);
       const sin = Math.sin(aim);
       g.save();
       g.transform(cos, sin, -sin, cos, x, y);
-      drawPixels(g, 0, -4.5, TURRET_ART.slice(0, 3), palette, 3);
+      drawPixels(g, 0, -6, TURRET_ART.slice(0, 3), palette, 4);
       g.restore();
     }
   }

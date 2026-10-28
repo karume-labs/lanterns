@@ -37,12 +37,19 @@ export const drawPlayer = (
   const radians = (aimDeg * Math.PI) / 180;
   const alpha = idle ? 0.4 : 1;
   const body = downed ? COLORS.twilight : color;
-  drawPixels(g, x, y, PLAYER_ART, { "0": COLORS.night, c: body }, 3);
+  drawPixels(
+    g,
+    x,
+    y,
+    PLAYER_ART,
+    { "0": COLORS.night, c: body, w: 0xffffff },
+    4,
+  );
   g.moveTo(x, y)
-    .lineTo(x + Math.cos(radians) * 16, y + Math.sin(radians) * 16)
+    .lineTo(x + Math.cos(radians) * 26, y + Math.sin(radians) * 26)
     .stroke({ width: 2, color: COLORS.night, alpha });
   if (downed)
-    g.circle(x, y, 17).stroke({ width: 1, color: COLORS.ember, alpha: 0.9 });
+    g.circle(x, y, 24).stroke({ width: 1, color: COLORS.ember, alpha: 0.9 });
 };
 
 export const drawDummy = (g: Graphics, hpRatio: number): void => {
@@ -53,7 +60,7 @@ export const drawDummy = (g: Graphics, hpRatio: number): void => {
     y,
     DUMMY_ART,
     { "0": COLORS.night, m: COLORS.moon, w: COLORS.ember, d: COLORS.twilight },
-    3,
+    4,
   );
   g.rect(x - 16, y - 30, 32, 4).fill({ color: COLORS.ink });
   g.rect(x - 16, y - 30, 32 * hpRatio, 4).fill({ color: COLORS.moss });
