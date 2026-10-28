@@ -1,4 +1,3 @@
-import { join } from "node:path";
 import {
   MAX_MESSAGE_BYTES,
   MESSAGE_RATE_LIMIT_PER_SEC,
@@ -9,6 +8,7 @@ import { env, isPortValid } from "./env";
 import { createMetrics, formatLog, recordReject, recordTick } from "./metrics";
 import { handleMessage } from "./net/messages";
 import { parseClientMessage } from "./net/parse";
+import { serveStatic } from "./net/static";
 import { publish, reply, type SocketData, type WireServer } from "./net/wire";
 import { createRoomManager } from "./rooms/room-manager";
 
@@ -17,19 +17,6 @@ if (!isPortValid) throw new Error(`Invalid PORT: ${env.port}`);
 const rooms = createRoomManager();
 const metrics = createMetrics();
 let server: WireServer;
-
-const serveStatic = async (pathname: string): Promise<Response> => {
-  const requested = pathname === "/" ? "index.html" : pathname.slice(1);
-  if (requested.includes(".."))
-    return new Response("Not found", { status: 404 });
-  const file = Bun.file(join(env.clientDir, requested));
-  if (await file.exists()) return new Response(file);
-  if (!requested.includes(".")) {
-    const index = Bun.file(join(env.clientDir, "index.html"));
-    if (await index.exists()) return new Response(index);
-  }
-  return new Response("Not found", { status: 404 });
-};
 
 const allowMessage = (data: SocketData, now: number): boolean => {
   if (now - data.rateWindow >= 1000) {
@@ -58,7 +45,10 @@ server = Bun.serve<SocketData>({
         ? undefined
         : new Response("WebSocket upgrade failed", { status: 400 });
     }
-    if (url.pathname === "/health") return Response.json({ ok: true });
+    if (url.pathname === "/health")
+      return new Response("ok", {
+        headers: { "content-type": "text/plain; charset=utf-8" },
+      });
     if (url.pathname === "/metrics")
       return Response.json({
         ...metrics,
