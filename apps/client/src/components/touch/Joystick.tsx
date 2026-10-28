@@ -8,14 +8,23 @@ interface JoystickProps {
 
 const KNOB_RADIUS_PX = 46;
 
-/** One-thumb virtual stick using Pointer Events so multi-touch just works. */
+type Source = "pointer" | "touch";
+
+/**
+ * One-thumb virtual stick. Pointer Events cover mouse/pen and most touch
+ * stacks, but Firefox on Android is unreliable with them (the pointer stream
+ * can be cancelled by the browser's own gesture handling), so touch events
+ * act as a parallel path. A single claimed source per gesture keeps the two
+ * paths from double-firing.
+ */
 export const Joystick = ({ label, onMove }: JoystickProps) => {
   const baseRef = useRef<HTMLDivElement>(null);
   const pointerId = useRef<number | null>(null);
+  const touchId = useRef<number | null>(null);
+  const source = useRef<Source | null>(null);
   const [knob, setKnob] = useState({ x: 0, y: 0 });
 
-  const track = (clientX: number, clientY: number, id: number): void => {
-    if (pointerId.current !== id) return;
+  const apply = (clientX: number, clientY: number): void => {
     const base = baseRef.current;
     if (!base) return;
     const rect = base.getBoundingClientRect();
@@ -29,33 +38,75 @@ export const Joystick = ({ label, onMove }: JoystickProps) => {
     onMove(nx / KNOB_RADIUS_PX, ny / KNOB_RADIUS_PX);
   };
 
-  const release = (id: number): void => {
-    if (pointerId.current !== id) return;
+  const release = (): void => {
     pointerId.current = null;
+    touchId.current = null;
+    source.current = null;
     setKnob({ x: 0, y: 0 });
     onMove(0, 0);
   };
+
+  // No unmount cleanup needed: the parent's input ref is dropped with this
+  // component, so a drag cut short by leaving the match cannot stick.
 
   return (
     <div
       aria-label={label}
       className="stick"
-      onPointerCancel={(event) => release(event.pointerId)}
+      onPointerCancel={(event) => {
+        if (
+          source.current === "pointer" &&
+          pointerId.current === event.pointerId
+        )
+          release();
+      }}
       onPointerDown={(event) => {
+        if (touchId.current !== null) return;
+        source.current = "pointer";
         pointerId.current = event.pointerId;
         try {
           event.currentTarget.setPointerCapture(event.pointerId);
         } catch {
           // synthetic pointers have no capture target
         }
-        track(event.clientX, event.clientY, event.pointerId);
+        apply(event.clientX, event.clientY);
       }}
-      onPointerMove={(event) =>
-        track(event.clientX, event.clientY, event.pointerId)
-      }
-      onPointerUp={(event) => release(event.pointerId)}
+      onPointerMove={(event) => {
+        if (
+          source.current !== "pointer" ||
+          pointerId.current !== event.pointerId
+        )
+          return;
+        apply(event.clientX, event.clientY);
+      }}
+      onPointerUp={(event) => {
+        if (pointerId.current === event.pointerId) release();
+      }}
       ref={baseRef}
       role="application"
+      onTouchCancel={() => {
+        if (source.current === "touch") release();
+      }}
+      onTouchEnd={() => {
+        if (source.current === "touch") release();
+      }}
+      onTouchMove={(event) => {
+        if (source.current !== "touch") return;
+        const wanted = touchId.current;
+        const touch = Array.from(event.touches).find(
+          (entry) => entry.identifier === wanted,
+        );
+        if (!touch) return;
+        apply(touch.clientX, touch.clientY);
+      }}
+      onTouchStart={(event) => {
+        if (pointerId.current !== null || touchId.current !== null) return;
+        const touch = event.changedTouches[0];
+        if (!touch) return;
+        source.current = "touch";
+        touchId.current = touch.identifier;
+        apply(touch.clientX, touch.clientY);
+      }}
     >
       <span
         className="knob"

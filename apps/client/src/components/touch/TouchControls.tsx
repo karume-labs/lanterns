@@ -31,13 +31,20 @@ export const TouchControls = ({ onInput }: TouchControlsProps) => {
     else push({ aimX: x, aimY: y, shooting: true });
   };
 
-  const press = (patch: Partial<InputState>) => ({
-    onPointerDown: () => push(patch),
-    onPointerUp: () =>
-      push({ placeConstruct: false, useRoleAbility: false, interact: false }),
-    onPointerCancel: () =>
-      push({ placeConstruct: false, useRoleAbility: false, interact: false }),
-  });
+  const press = (patch: Partial<InputState>) => {
+    const clear = (): void =>
+      push({ placeConstruct: false, useRoleAbility: false, interact: false });
+    return {
+      onPointerDown: () => push(patch),
+      onPointerUp: clear,
+      onPointerCancel: clear,
+      // Firefox on Android can drop the pointer stream on buttons too; the
+      // server dedupes pending intents, so both paths may fire safely.
+      onTouchStart: () => push(patch),
+      onTouchEnd: clear,
+      onTouchCancel: clear,
+    };
+  };
 
   return (
     <>

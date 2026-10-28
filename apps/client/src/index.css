@@ -1068,8 +1068,12 @@ body.low-hp-vignette::after {
   border-radius: 50%;
   height: 120px;
   position: relative;
+  /* Also stop Firefox's long-press/context-menu gesture from eating drags. */
+  -webkit-user-select: none;
   touch-action: none;
+  user-select: none;
   width: 120px;
+  -webkit-user-modify: read-write-allow-selection;
 }
 .knob {
   background: var(--fog);
@@ -1100,6 +1104,7 @@ body.low-hp-vignette::after {
   gap: 8px;
   position: fixed;
   right: max(24px, calc(env(safe-area-inset-right) + 12px));
+  touch-action: none;
   z-index: 16;
 }
 .touch-actions button {
