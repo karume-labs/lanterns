@@ -38,7 +38,7 @@ export const routeServerMessage = (
       handlers.onLevelUp(message.choices, message.level);
       return;
     case "match-ended":
-      handlers.onMatchEnded(message.stats);
+      handlers.onMatchEnded(message.stats, message.outcome);
       return;
     case "notice":
       handlers.onNotice(message.message);

@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { leaveRoom } from "../../app/room-actions";
 import { useAppStore } from "../../app/store";
 import { Panel } from "../../components/ui/Panel";
+import { playSfx } from "../../game/audio";
 import { PlayerList, StartHint } from "./PlayerList";
 import { RolePicker } from "./RolePicker";
 import { HubCorner, RoomCodeChip } from "./RoomCodeChip";
@@ -15,12 +16,21 @@ const countdownText = (endsAt: number | null): string => {
 /** Big countdown number; identical updates bail out of rendering. */
 const Countdown = ({ endsAt }: { endsAt: number | null }) => {
   const [text, setText] = useState("");
+  const previous = useRef("");
   useEffect(() => {
     const update = (): void => setText(countdownText(endsAt));
     update();
     const timer = window.setInterval(update, 250);
     return () => window.clearInterval(timer);
   }, [endsAt]);
+  useEffect(() => {
+    // One beep per new second; the first paint is silent (started event has
+    // its own cue).
+    if (text && text !== previous.current) {
+      if (previous.current !== "" && /^\d$/.test(text)) playSfx("count");
+      previous.current = text;
+    }
+  }, [text]);
   if (!text) return null;
   return (
     <div aria-live="assertive" className="countdown pulse">

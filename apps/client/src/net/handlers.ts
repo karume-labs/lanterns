@@ -18,7 +18,7 @@ export interface SocketHandlers {
   onSnapshot: (snap: Snapshot) => void;
   onEvent: (event: RoomEvent, playerId?: string, name?: string) => void;
   onLevelUp: (choices: UpgradeChoice[], level: number) => void;
-  onMatchEnded: (stats: MatchStats) => void;
+  onMatchEnded: (stats: MatchStats, outcome: "won" | "lost") => void;
   onNotice: (message: string) => void;
   onError: (message: string, code?: string) => void;
   onLatency: (ms: number) => void;

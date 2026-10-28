@@ -9,6 +9,7 @@ import {
   NotFound,
   RotateOverlay,
 } from "../features/system/SystemOverlays";
+import { playSfx, setAudioSettings, setNightAudible } from "../game/audio";
 import {
   setFxFlags,
   setPlayerIdRef,
@@ -49,11 +50,19 @@ export const App = () => {
           store.setStats(null);
       },
       onSnapshot: setSnapRef,
-      onEvent: (event) =>
-        useAppStore.getState().toast(EVENT_TEXT[event] ?? event),
-      onLevelUp: (choices, level) =>
-        useAppStore.getState().setLevelUp({ choices, level }),
-      onMatchEnded: (stats) => useAppStore.getState().setStats(stats),
+      onEvent: (event) => {
+        if (event === "countdown-started") playSfx("count");
+        if (event === "match-started") playSfx("ignite");
+        useAppStore.getState().toast(EVENT_TEXT[event] ?? event);
+      },
+      onLevelUp: (choices, level) => {
+        playSfx("levelup");
+        useAppStore.getState().setLevelUp({ choices, level });
+      },
+      onMatchEnded: (stats, outcome) => {
+        playSfx(outcome === "won" ? "win" : "lose");
+        useAppStore.getState().setStats(stats);
+      },
       onNotice: (message) => useAppStore.getState().toast(message),
       onError: (message, code) => {
         const store = useAppStore.getState();
@@ -87,6 +96,13 @@ export const App = () => {
   }, []);
 
   const settings = useAppStore((state) => state.settings);
+  const room = useAppStore((state) => state.room);
+  useEffect(() => {
+    setAudioSettings(settings);
+  }, [settings]);
+  useEffect(() => {
+    setNightAudible(room !== null);
+  }, [room]);
   useEffect(() => {
     const reduced =
       settings.reduceMotion ||

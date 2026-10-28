@@ -10,6 +10,7 @@ import {
   type Ring,
   renderFx,
 } from "./fx-render";
+import { fxSounds } from "./fx-sounds";
 
 const styleCache = new Map<number, TextStyle>();
 
@@ -54,6 +55,7 @@ export class FxTracker {
   }
 
   ingest(events: readonly SnapshotEvent[]): void {
+    fxSounds(events);
     for (const event of events) {
       if (event.k === "hit") {
         if (frameRefs.damageNumbers)
