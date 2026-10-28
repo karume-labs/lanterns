@@ -52,7 +52,9 @@ export const RolePicker = ({ onClose }: RolePickerProps) => {
   const pick = (card: CardView): void => {
     if (!card.available) return;
     getSocket()?.selectRole(card.id as Role);
-    onClose();
+    // Stay open: picking readies you up, and the countdown shows on top so
+    // you can watch it run while the rack is still in front of you. The
+    // picker closes itself when the match takes over the screen.
   };
 
   return (

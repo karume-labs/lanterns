@@ -36,6 +36,7 @@ export const BuildPad = ({ hotkeys }: BuildPadProps) => {
       >
         Wall
         <small className="num">25</small>
+        {hotkeys && <kbd className="key">Q</kbd>}
       </button>
       <button
         onClick={() =>
@@ -46,6 +47,7 @@ export const BuildPad = ({ hotkeys }: BuildPadProps) => {
       >
         Turret
         <small className="num">45</small>
+        {hotkeys && <kbd className="key">E</kbd>}
       </button>
     </div>
   );
@@ -80,6 +82,7 @@ export const AbilityButton = ({ hotkeys }: BuildPadProps) => {
     >
       <span aria-hidden="true" className="cooldown-ring" ref={ring} />
       <span>Ability</span>
+      {hotkeys && <kbd className="key">Space</kbd>}
     </button>
   );
 };

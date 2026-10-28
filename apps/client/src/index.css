@@ -92,6 +92,20 @@ small {
 .num {
   font-variant-numeric: tabular-nums;
 }
+/* Visible key shortcut badge on the desktop build/ability buttons. */
+.key {
+  background: var(--night-ink);
+  border: 1px solid var(--fog);
+  border-radius: 0;
+  color: var(--bone);
+  display: inline-block;
+  font-family: var(--font-head);
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1;
+  margin-left: 4px;
+  padding: 2px 4px;
+}
 .empty {
   color: var(--fog);
   font-size: 13px;
@@ -549,6 +563,7 @@ button.danger {
   text-shadow: 0 0 18px var(--lantern-amber);
   top: 24%;
   transform: translateX(-50%);
+  z-index: 45;
 }
 .hub-prompt {
   bottom: 12vh;
