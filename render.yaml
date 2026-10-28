@@ -1,0 +1,15 @@
+# Render Blueprint: one Docker web service for Lanterns.
+# The Bun server serves the built client and the WebSocket on the same port,
+# so players only ever need one URL.
+services:
+  - type: web
+    name: lanterns
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    # Closest Render region to Nairobi (Africa/Nairobi -> frankfurt).
+    region: frankfurt
+    plan: free
+    # Free instances sleep when idle; the next request cold-starts them.
+    healthCheckPath: /health
+    # autoDeploy on: every push to the linked branch triggers a deploy.
+    autoDeployTrigger: commit
