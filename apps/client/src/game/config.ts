@@ -11,8 +11,12 @@ export const TILE = 32;
 /** Snapshots held back for interpolation (~133 ms at 15 Hz). */
 export const INTERP_DELAY_TICKS = 2;
 
-/** Local-player reconciliation: snap hard past this error, blend below it. */
+/**
+ * Local-player reconciliation: snap hard past this error, ignore routine
+ * prediction error entirely (the deadzone), blend in between.
+ */
 export const RECONCILE_SNAP = 64;
+export const RECONCILE_DEADZONE = 20;
 export const RECONCILE_BLEND = 0.35;
 
 export const COLORS = {

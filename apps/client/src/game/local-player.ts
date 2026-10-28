@@ -1,6 +1,6 @@
 import type { Vector2 } from "@lanterns/domain";
 import { currentInput } from "../input/current-input";
-import { RECONCILE_BLEND, RECONCILE_SNAP } from "./config";
+import { RECONCILE_BLEND, RECONCILE_DEADZONE, RECONCILE_SNAP } from "./config";
 
 /**
  * The local player renders immediately from input instead of waiting for the
@@ -47,6 +47,9 @@ export class LocalPlayer {
     const dx = auth.x - this.x;
     const dy = auth.y - this.y;
     const error = Math.hypot(dx, dy);
+    // Routine prediction lag (input latency) stays put: correcting it every
+    // snapshot is what makes walking look stuttery.
+    if (error <= RECONCILE_DEADZONE) return;
     if (error > RECONCILE_SNAP) {
       this.x = auth.x;
       this.y = auth.y;
