@@ -13,6 +13,7 @@ export type ClientMessage =
   | { type: "return-lobby" }
   | { type: "place-construct"; position: Vector2; kind?: "wall" | "turret" }
   | { type: "choose-upgrade"; upgradeId: string }
+  | { type: "pause-match"; paused: boolean }
   | { type: "ping"; sentAt: number };
 
 export const CLIENT_MESSAGE_TYPES = [
@@ -27,6 +28,7 @@ export const CLIENT_MESSAGE_TYPES = [
   "return-lobby",
   "place-construct",
   "choose-upgrade",
+  "pause-match",
   "ping",
 ] as const;
 

@@ -8,6 +8,8 @@ export const ROOM_EVENTS = [
   "countdown-cancelled",
   "match-started",
   "host-changed",
+  "game-paused",
+  "game-resumed",
 ] as const;
 export type RoomEvent = (typeof ROOM_EVENTS)[number];
 

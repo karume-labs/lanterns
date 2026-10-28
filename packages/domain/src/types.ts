@@ -110,4 +110,7 @@ export interface RoomState {
   nextXpThreshold: number;
   upgradeChoices: UpgradeChoice[];
   winner: "won" | "lost" | null;
+  /** true while at least one player has the in-match menu open: the whole
+   *  room's simulation is frozen (clock, enemies, spawning, movement). */
+  paused: boolean;
 }

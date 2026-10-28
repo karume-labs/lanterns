@@ -23,6 +23,7 @@ drift apart.
 | `return-lobby`    | After a match, return the room to the hub.             | won/lost     |
 | `place-construct` | Request a wall/turret at an explicit position.         | lobby/active |
 | `choose-upgrade`  | Select one presented level-up option for the team.     | active       |
+| `pause-match`     | Open/close the in-match menu; freezes the whole room.  | active       |
 | `ping`            | Measure round-trip latency.                            | any          |
 
 Notes:
@@ -41,6 +42,11 @@ Notes:
   re-validates range, cost, cooldown, and overlap.
 - Messages received in the wrong phase are rejected with an `error` and never
   mutate state.
+- `pause-match` with `paused: true` freezes the whole room (clock, enemies,
+  spawning, movement) while at least one player holds the menu open; the room
+  resumes when the last requester closes it, leaves, or disconnects. Inputs
+  and placements are dropped while paused, and the server's sim clock skips
+  the frozen span entirely so no timer advances across a pause.
 
 ## Server messages
 
@@ -118,7 +124,9 @@ type RoomEvent =
   | "countdown-started"
   | "countdown-cancelled"
   | "match-started"
-  | "host-changed";
+  | "host-changed"
+  | "game-paused"
+  | "game-resumed";
 ```
 
 ## Timing model
