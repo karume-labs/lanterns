@@ -1,5 +1,6 @@
-import { RECONNECT_GRACE_MS } from "@lanterns/domain";
+import { LEVEL_UP_INTERMISSION_MS, RECONNECT_GRACE_MS } from "@lanterns/domain";
 import { stepMatch } from "../sim/match-sim";
+import { addXp, applyUpgradePick } from "../sim/upgrades";
 import { updateCountdown } from "./countdown";
 import { removePlayer } from "./leaving";
 import { stepLobby } from "./lobby";
@@ -43,8 +44,41 @@ export const tickRoom = (room: RuntimeRoom, now: number): TickResult | null => {
       stepLobby(room, now);
       events.push(...updateCountdown(room, now));
     } else if (room.state.phase === "active") {
-      stepMatch(room.state, room.rt, gameClock(room, now));
-      if (!hadChoices && room.state.upgradeChoices.length) levelUp = true;
+      if (room.state.upgradeChoices.length > 0) {
+        // Level-up intermission: the whole sim holds still while the crew
+        // picks. Resolves when every connected player has voted, or when
+        // the deadline passes (the first choice then wins by default).
+        // (Re)arm on entry; the deadline check also covers a table that
+        // was already pending when this tick first saw it (deadline 0).
+        if (!hadChoices || room.rt.levelUpDeadline === 0) {
+          room.rt.levelUpAcks.clear();
+          room.rt.levelUpApplied = false;
+          room.rt.levelUpDeadline =
+            gameClock(room, now) + LEVEL_UP_INTERMISSION_MS;
+        }
+        const need = room.state.players
+          .filter((player) => player.connected)
+          .map((player) => player.id);
+        if (
+          (need.length > 0 &&
+            need.every((id) => room.rt.levelUpAcks.has(id))) ||
+          gameClock(room, now) >= room.rt.levelUpDeadline
+        ) {
+          if (!room.rt.levelUpApplied) {
+            const first = room.state.upgradeChoices[0];
+            if (first) applyUpgradePick(room.state, room.rt, first.id);
+          }
+          room.state.upgradeChoices = [];
+          room.rt.levelUpAcks.clear();
+          room.rt.levelUpApplied = false;
+          room.dirty = true;
+          // Banked XP may span two thresholds: roll the next pick at once.
+          addXp(room.state, room.rt, 0);
+        }
+      } else {
+        stepMatch(room.state, room.rt, gameClock(room, now));
+        if (!hadChoices && room.state.upgradeChoices.length) levelUp = true;
+      }
     }
   }
 

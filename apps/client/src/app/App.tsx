@@ -46,7 +46,9 @@ export const App = () => {
         setRoomRef(room);
         const store = useAppStore.getState();
         store.setRoom(room);
-        store.setLevelUp(null);
+        // Level-up choices clear through the overlay itself: wiping here
+        // would kill the waiting screen every time a vote broadcasts.
+        if (room.upgradeChoices.length === 0) store.setLevelUp(null);
         // A successful join leaves the form screen for the room it opened.
         if (store.screen === "join") store.go("hub");
         if (room.phase === "lobby" || room.phase === "countdown")

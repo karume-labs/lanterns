@@ -23,8 +23,12 @@ const levelUp = (state: RoomState, rt: SimRuntime): void => {
   state.upgradeChoices = rollLevelUpChoices(rt.takenUpgrades, rt.rng);
 };
 
-/** Apply a team level-up pick; returns false when the pick is not legal. */
-export const chooseUpgrade = (
+/**
+ * Apply the upgrade effect without clearing the choice table. The tick owns
+ * clearing: choices stay up until every connected player has voted (or the
+ * intermission deadline passes), so the whole crew picks together.
+ */
+export const applyUpgradePick = (
   state: RoomState,
   rt: SimRuntime,
   upgradeId: string,
@@ -33,7 +37,6 @@ export const chooseUpgrade = (
   const def = findUpgrade(upgradeId);
   if (!def) return false;
   rt.takenUpgrades[upgradeId] = (rt.takenUpgrades[upgradeId] ?? 0) + 1;
-  state.upgradeChoices = [];
 
   if (def.instantFuel && state.lantern)
     state.lantern.fuel = Math.min(
@@ -53,6 +56,18 @@ export const chooseUpgrade = (
     }
   if (state.teamXp >= state.nextXpThreshold && !state.upgradeChoices.length)
     levelUp(state, rt);
+  return true;
+};
+
+/** Legacy single-pick path (tests and headless runs): apply and clear. */
+export const chooseUpgrade = (
+  state: RoomState,
+  rt: SimRuntime,
+  upgradeId: string,
+): boolean => {
+  if (!applyUpgradePick(state, rt, upgradeId)) return false;
+  state.upgradeChoices = [];
+  if (state.teamXp >= state.nextXpThreshold) levelUp(state, rt);
   return true;
 };
 
