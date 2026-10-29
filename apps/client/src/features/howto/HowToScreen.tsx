@@ -65,7 +65,7 @@ export const HowToScreen = () => {
 
   return (
     <div className="modal-dim screen-enter">
-      <Panel className="howto-panel">
+      <Panel className="howto-panel" onClose={() => go(previousScreen)}>
         <h2>How to play</h2>
         <div className={`mini-demo ${current.demo}`} aria-hidden="true">
           <span className="demo-lantern" />

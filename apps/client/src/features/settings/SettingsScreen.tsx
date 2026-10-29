@@ -25,7 +25,7 @@ export const SettingsScreen = () => {
 
   return (
     <div className="modal-dim screen-enter">
-      <Panel className="settings-panel">
+      <Panel className="settings-panel" onClose={() => go(previousScreen)}>
         <h2>Settings</h2>
 
         <h3>Controls</h3>

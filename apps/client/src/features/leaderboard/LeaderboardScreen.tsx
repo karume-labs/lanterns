@@ -23,7 +23,7 @@ export const LeaderboardScreen = () => {
   const current = bucketFor(room?.players.length ?? 1);
 
   return (
-    <Panel className="leaderboard-panel">
+    <Panel className="leaderboard-panel" onClose={() => go(previousScreen)}>
       <h2>Leaderboard</h2>
       <div className="bucket-tabs">
         {BUCKETS.map((bucket) => {

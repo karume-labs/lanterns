@@ -21,7 +21,7 @@ export const CreditsScreen = () => {
 
   return (
     <div className="modal-dim screen-enter">
-      <Panel className="credits-panel">
+      <Panel className="credits-panel" onClose={() => go(previousScreen)}>
         <h2>Credits</h2>
         <pre className="credits-text">{text}</pre>
         <button onClick={() => go(previousScreen)} type="button">

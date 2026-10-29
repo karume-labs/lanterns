@@ -143,7 +143,10 @@ small {
   border: 4px solid var(--fog);
   box-shadow: 6px 6px 0 var(--night-ink);
   left: 50%;
+  max-height: calc(100dvh - 24px);
   max-width: 440px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 20px;
   position: fixed;
   top: 50%;
@@ -153,6 +156,50 @@ small {
 }
 .panel.pixel-frame {
   border-image: url("/ui/panel.png") 6 fill stretch;
+}
+/* Scrollbar in the palette: slate thumb on indigo track, no default arrows.
+   Chromium ignores the ::-webkit-scrollbar rules once scrollbar-color is set,
+   so the standard properties only apply where the pseudo-elements are absent. */
+@supports not selector(::-webkit-scrollbar) {
+  .panel {
+    scrollbar-color: var(--slate) var(--indigo);
+    scrollbar-width: thin;
+  }
+}
+.panel::-webkit-scrollbar {
+  width: 12px;
+}
+.panel::-webkit-scrollbar-button {
+  display: none;
+}
+.panel::-webkit-scrollbar-track {
+  background: var(--indigo);
+}
+.panel::-webkit-scrollbar-thumb {
+  background: var(--slate);
+  border: 2px solid var(--indigo);
+}
+.panel::-webkit-scrollbar-thumb:hover {
+  background: var(--lantern-amber);
+}
+/* Close button pinned to the panel's top-right while it scrolls. */
+.panel-close-bar {
+  display: flex;
+  height: 0;
+  justify-content: flex-end;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.panel-close {
+  align-items: center;
+  display: flex;
+  font-size: 20px;
+  height: 32px;
+  justify-content: center;
+  margin: -8px -8px 0 0;
+  padding: 0;
+  width: 32px;
 }
 
 label {
@@ -1177,11 +1224,13 @@ html.reduce-motion .paused-dot {
 .touch-move {
   bottom: max(16px, env(safe-area-inset-bottom));
   left: max(16px, env(safe-area-inset-left));
+  pointer-events: auto;
   position: fixed;
   z-index: 16;
 }
 .touch-aim {
   bottom: max(16px, env(safe-area-inset-bottom));
+  pointer-events: auto;
   position: fixed;
   right: max(16px, env(safe-area-inset-right));
   z-index: 16;
@@ -1222,10 +1271,6 @@ html.reduce-motion .paused-dot {
   .portraits {
     top: 30px;
   }
-  .panel {
-    max-height: 92vh;
-    overflow: auto;
-  }
 }
 
 /* Dev gallery. */
@@ -1233,6 +1278,8 @@ html.reduce-motion .paused-dot {
   padding: 24px;
 }
 .dev-gallery .panel {
+  max-height: none;
+  overflow: visible;
   position: static;
   transform: none;
   width: 100%;

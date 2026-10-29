@@ -9,14 +9,15 @@ import { Panel } from "../../components/ui/Panel";
  */
 export const PauseOverlay = () => {
   const go = useAppStore((state) => state.go);
-  const previousScreen = useAppStore((state) => state.previousScreen);
 
+  // Resume always returns to the live match: previousScreen can be a sub-screen
+  // (Settings or How to Play) that was opened from this panel.
   return (
     <div className="modal-dim screen-enter">
-      <Panel className="pause-panel">
+      <Panel className="pause-panel" onClose={() => go("match")}>
         <h2>The night holds its breath</h2>
         <p>The whole room is paused until you resume. Take what you need.</p>
-        <button onClick={() => go(previousScreen)} type="button">
+        <button onClick={() => go("match")} type="button">
           Resume
         </button>
         <button onClick={() => go("settings")} type="button">
