@@ -1,11 +1,16 @@
-import { PLAYER_FLAG } from "@lanterns/domain";
+import { MATCH_DURATION_SECONDS, PLAYER_FLAG } from "@lanterns/domain";
 import { useEffect } from "react";
 import { useAppStore } from "../../app/store";
-import { AbilityButton, BuildPad } from "../../components/hud/BuildAbility";
+import {
+  AbilityButton,
+  ActionPad,
+  BuildPad,
+} from "../../components/hud/BuildAbility";
 import { SkyTimer } from "../../components/hud/SkyTimer";
 import { TeamPortraits } from "../../components/hud/TeamPortraits";
 import { EnergyMeter, FuelGauge, XPBar } from "../../components/hud/VitalsBars";
 import { TouchControls } from "../../components/touch/TouchControls";
+import { intensityFor, setMusicIntensity } from "../../game/audio";
 import { frameRefs } from "../../game/frame-refs";
 import { useHudFrame } from "../../hooks/useHudFrame";
 import { dispatchInput } from "../../input/current-input";
@@ -32,6 +37,20 @@ const myRowSafe = (): number[] | undefined => {
   return index >= 0 ? frameRefs.snap?.pl[index] : undefined;
 };
 
+/** The battle layer swells as the run progresses and enemies press in. */
+const useMusicIntensity = (): void => {
+  useHudFrame(() => {
+    const snap = frameRefs.snap;
+    if (!snap || snap.ph !== "active") {
+      setMusicIntensity(0);
+      return;
+    }
+    setMusicIntensity(
+      intensityFor(snap.el, MATCH_DURATION_SECONDS, snap.en.length),
+    );
+  });
+};
+
 /** Full match HUD; every number moves through refs, never React state. */
 export const MatchHud = () => {
   const go = useAppStore((state) => state.go);
@@ -42,6 +61,7 @@ export const MatchHud = () => {
   const hotkeys =
     settings.scheme !== "touch" && !(settings.scheme === "auto" && coarse);
   useVitalsClasses();
+  useMusicIntensity();
 
   // Leaving the match must not leave the red border behind on the menu.
   useEffect(
@@ -63,6 +83,7 @@ export const MatchHud = () => {
           <XPBar />
           <BuildPad hotkeys={hotkeys} />
           <AbilityButton hotkeys={hotkeys} />
+          {hotkeys && <ActionPad hotkeys={hotkeys} />}
         </div>
       )}
       <button

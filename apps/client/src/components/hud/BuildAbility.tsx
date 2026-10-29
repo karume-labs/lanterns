@@ -11,8 +11,45 @@ const pulse = (patch: Partial<InputState>): void => {
         ...currentInput.value,
         placeConstruct: false,
         useRoleAbility: false,
+        interact: false,
       }),
     90,
+  );
+};
+
+/**
+ * Desktop twins of the touch buttons: hold Shoot to fire like a mouse
+ * click, tap Revive to interact like the F key. Every control scheme can
+ * reach every verb with a pointer alone.
+ */
+export const ActionPad = ({ hotkeys }: BuildPadProps) => {
+  const setShooting = (shooting: boolean): void => {
+    dispatchInput({ ...currentInput.value, shooting });
+  };
+  return (
+    <div className="action-pad">
+      <button
+        aria-label="Hold to shoot"
+        onPointerCancel={() => setShooting(false)}
+        onPointerDown={() => setShooting(true)}
+        onPointerLeave={() => setShooting(false)}
+        onPointerUp={() => setShooting(false)}
+        title={hotkeys ? "Shoot - Click" : "Hold to shoot"}
+        type="button"
+      >
+        Shoot
+        {hotkeys && <kbd className="key">Click</kbd>}
+      </button>
+      <button
+        aria-label="Revive nearby teammate"
+        onClick={() => pulse({ interact: true })}
+        title={hotkeys ? "Revive - F" : "Revive nearby teammate"}
+        type="button"
+      >
+        Revive
+        {hotkeys && <kbd className="key">F</kbd>}
+      </button>
+    </div>
   );
 };
 
