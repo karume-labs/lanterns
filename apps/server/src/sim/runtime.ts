@@ -26,7 +26,12 @@ export interface SimRuntime {
    * `inputs` can no longer swallow the press.
    */
   pendingAbility: Set<string>;
-  pendingPlace: Set<string>;
+  /**
+   * Queued placement attempts per player (capped). Rapid taps queue up
+   * instead of collapsing into one, so every tap with energy eventually
+   * places - one per tick, still gated by cooldown and cost.
+   */
+  pendingPlace: Map<string, number>;
   /** ms timestamps of the last accepted shot per player */
   lastShotAt: Map<string, number>;
   /** ms timestamps of the last role ability per player */
@@ -43,6 +48,12 @@ export interface SimRuntime {
   nextSpawnAt: number;
   /** Lumen beacon: light stays wide until this ms timestamp */
   beaconUntil: number;
+  /** players who already locked their level-up vote this intermission */
+  levelUpAcks: Set<string>;
+  /** true once the first vote applied the team upgrade effect */
+  levelUpApplied: boolean;
+  /** game-clock ms when the intermission auto-resolves */
+  levelUpDeadline: number;
   /** fixed tick counter since the room was created */
   tick: number;
   /** injectable randomness so headless tests are reproducible */
@@ -54,12 +65,15 @@ export interface SimRuntime {
 export const createRuntime = (rng: () => number = Math.random): SimRuntime => ({
   inputs: new Map(),
   pendingAbility: new Set(),
-  pendingPlace: new Set(),
+  pendingPlace: new Map(),
   lastShotAt: new Map(),
   lastAbilityAt: new Map(),
   lastPlaceAt: new Map(),
   enemyOwner: new Map(),
   takenUpgrades: {},
+  levelUpAcks: new Set(),
+  levelUpApplied: false,
+  levelUpDeadline: 0,
   events: [],
   nextSpawnAt: 0,
   beaconUntil: 0,

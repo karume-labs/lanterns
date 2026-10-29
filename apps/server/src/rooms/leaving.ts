@@ -24,6 +24,7 @@ export const removePlayer = (
   room.rt.inputs.delete(playerId);
   room.rt.pendingAbility.delete(playerId);
   room.rt.pendingPlace.delete(playerId);
+  room.rt.levelUpAcks.delete(playerId);
   room.prevReady.delete(playerId);
   room.dirty = true;
 

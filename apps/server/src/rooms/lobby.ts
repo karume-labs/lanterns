@@ -60,7 +60,10 @@ export const stepLobby = (room: RuntimeRoom, now: number): void => {
         room.rt.lastShotAt.set(player.id, now);
         shootDummy(room, player, now);
       }
-      if (room.rt.pendingPlace.delete(player.id)) {
+      const queued = room.rt.pendingPlace.get(player.id) ?? 0;
+      if (queued > 0) {
+        if (queued <= 1) room.rt.pendingPlace.delete(player.id);
+        else room.rt.pendingPlace.set(player.id, queued - 1);
         placeAt(
           state,
           room.rt,

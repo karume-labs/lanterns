@@ -49,7 +49,7 @@ export const TURRET_MAX_HEALTH = 90;
 export const WALL_LIFETIME_MS = 45_000;
 export const TURRET_LIFETIME_MS = 60_000;
 export const CONSTRUCT_PLACEMENT_RANGE = 96;
-export const CONSTRUCT_PLACEMENT_COOLDOWN_MS = 350;
+export const CONSTRUCT_PLACEMENT_COOLDOWN_MS = 200;
 export const TURRET_RANGE = 240;
 export const TURRET_DAMAGE = 9;
 export const TURRET_FIRE_MS = 600;
@@ -67,6 +67,7 @@ export const SHARD_DEPOSIT_RADIUS = 72;
 export const SHARD_MERGE_RADIUS = 22;
 
 // XP and level-ups
+export const LEVEL_UP_INTERMISSION_MS = 25_000;
 export const XP_PER_LEVEL_BASE = 60;
 export const XP_LEVEL_GROWTH = 1.35;
 export const UPGRADE_OPTIONS_COUNT = 3;

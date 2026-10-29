@@ -1,11 +1,8 @@
 import { type InputState, normalizeInput, type Role } from "@lanterns/domain";
-import { placeAt } from "../sim/constructs";
 import { endToLobby } from "../sim/lifecycle";
-import { chooseUpgrade } from "../sim/upgrades";
 import { allReady, beginCountdown, respawnAtHub } from "./countdown";
 import { RoomError } from "./errors";
 import { playerOf, roomOf } from "./lookup";
-import { gameClock } from "./pause";
 import type { MutationResult, RuntimeRoom } from "./runtime";
 
 type Rooms = ReadonlyMap<string, RuntimeRoom>;
@@ -24,8 +21,14 @@ export const setInput = (
   if (room.state.paused) return;
   const normalized = normalizeInput(input);
   // Queue edge intents on receipt: they survive until a tick consumes them.
+  // Placements queue on the rising edge only, so holding the button does not
+  // stockpile attempts - but every distinct tap banks one (capped at 5).
+  const previous = room.rt.inputs.get(playerId);
   if (normalized.useRoleAbility) room.rt.pendingAbility.add(playerId);
-  if (normalized.placeConstruct) room.rt.pendingPlace.add(playerId);
+  if (normalized.placeConstruct && !previous?.placeConstruct) {
+    const queued = room.rt.pendingPlace.get(playerId) ?? 0;
+    room.rt.pendingPlace.set(playerId, Math.min(5, queued + 1));
+  }
   room.rt.inputs.set(playerId, normalized);
 };
 
@@ -89,45 +92,6 @@ export const returnToLobby = (
   return { room: room.state, events: [], levelUp: false };
 };
 
-export const pickUpgrade = (
-  rooms: Rooms,
-  code: string,
-  playerId: string,
-  upgradeId: string,
-): MutationResult => {
-  const room = roomOf(rooms, code);
-  playerOf(room, playerId);
-  if (!chooseUpgrade(room.state, room.rt, upgradeId))
-    throw new RoomError(
-      "wrong-phase",
-      "That upgrade is not on the table right now.",
-    );
-  room.dirty = true;
-  return {
-    room: room.state,
-    events: [],
-    levelUp: room.state.upgradeChoices.length > 0,
-  };
-};
-
-export const place = (
-  rooms: Rooms,
-  code: string,
-  playerId: string,
-  position: { x: number; y: number },
-  kind: "wall" | "turret" | undefined,
-  now: number,
-): void => {
-  const room = roomOf(rooms, code);
-  const player = playerOf(room, playerId);
-  if (room.state.paused) return;
-  const input = room.rt.inputs.get(playerId);
-  placeAt(
-    room.state,
-    room.rt,
-    player,
-    kind ?? input?.selectedConstruct ?? "wall",
-    position,
-    gameClock(room, now),
-  );
-};
+export { place } from "./placement";
+/** Re-exported so room-manager keeps one actions import. */
+export { pickUpgrade } from "./upgrade-votes";

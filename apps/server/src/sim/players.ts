@@ -84,7 +84,12 @@ export const stepPlayers = (
     }
     if (rt.pendingAbility.delete(player.id))
       castAbility(state, rt, player, now);
-    if (rt.pendingPlace.delete(player.id)) {
+    // Consume one queued placement per tick: rapid taps each resolve in
+    // turn (cooldown and energy still gate every attempt).
+    const queued = rt.pendingPlace.get(player.id) ?? 0;
+    if (queued > 0) {
+      if (queued <= 1) rt.pendingPlace.delete(player.id);
+      else rt.pendingPlace.set(player.id, queued - 1);
       placeAt(
         state,
         rt,
