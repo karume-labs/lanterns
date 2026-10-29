@@ -1,7 +1,9 @@
 import type { Snapshot } from "@lanterns/domain";
-import { INTERP_DELAY_TICKS } from "./config";
+import { INTERP_DELAY_MS } from "./config";
 
-const BUFFER_SIZE = 10;
+const BUFFER_SIZE = 12;
+/** Offset samples kept for the min-filter; drops network-delay spikes. */
+const OFFSET_WINDOW = 32;
 
 export interface SampledState {
   a: Snapshot;
@@ -16,6 +18,9 @@ export interface SampledState {
  */
 export class Interpolator {
   #buffer: Snapshot[] = [];
+  #offsets: number[] = [];
+  /** Local receive time minus server snapshot time, min-filtered. */
+  #offset = Number.NaN;
 
   get latestTick(): number {
     return this.#buffer.at(-1)?.t ?? 0;
@@ -27,9 +32,16 @@ export class Interpolator {
 
   clear(): void {
     this.#buffer = [];
+    this.#offsets = [];
+    this.#offset = Number.NaN;
   }
 
-  push(snap: Snapshot): void {
+  /** Record a snapshot received at local time `receivedAt` (ms). */
+  push(snap: Snapshot, receivedAt: number): void {
+    this.#offsets.push(receivedAt - snap.ms);
+    if (this.#offsets.length > OFFSET_WINDOW) this.#offsets.shift();
+    this.#offset = Math.min(...this.#offsets);
+
     const last = this.#buffer.at(-1);
     if (last && snap.t <= last.t) {
       // Same or older tick: keep the freshest copy.
@@ -41,24 +53,28 @@ export class Interpolator {
     while (this.#buffer.length > BUFFER_SIZE) this.#buffer.shift();
   }
 
-  /** Blend window for `nowTick`; null before enough data arrives. */
-  sample(nowTick: number): SampledState | null {
-    const target = nowTick - INTERP_DELAY_TICKS;
+  /**
+   * Blend window for the local render clock `now` (ms), sampled
+   * INTERP_DELAY_MS behind the estimated server time. Null before data.
+   */
+  sample(now: number): SampledState | null {
+    if (Number.isNaN(this.#offset)) return null;
+    const target = now - this.#offset - INTERP_DELAY_MS;
     const buffer = this.#buffer;
     if (buffer.length === 0) return null;
     const first = buffer[0];
     const last = buffer.at(-1);
     if (!first || !last) return null;
-    if (buffer.length === 1 || target <= first.t)
+    if (buffer.length === 1 || target <= first.ms)
       return { a: first, b: first, alpha: 0 };
-    if (target >= last.t) return { a: last, b: last, alpha: 0 };
+    if (target >= last.ms) return { a: last, b: last, alpha: 0 };
     for (let index = buffer.length - 1; index > 0; index--) {
       const older = buffer[index - 1];
       const newer = buffer[index];
-      if (!older || !newer || target < older.t) continue;
-      if (target > newer.t) continue;
-      const span = newer.t - older.t;
-      const alpha = span > 0 ? (target - older.t) / span : 0;
+      if (!older || !newer || target < older.ms) continue;
+      if (target > newer.ms) continue;
+      const span = newer.ms - older.ms;
+      const alpha = span > 0 ? (target - older.ms) / span : 0;
       return { a: older, b: newer, alpha };
     }
     return { a: last, b: last, alpha: 0 };

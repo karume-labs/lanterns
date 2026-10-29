@@ -58,7 +58,7 @@ export class Scene {
     }
     if (snap && snap.t !== this.#lastSnapT) {
       this.#lastSnapT = snap.t;
-      this.#interp.push(snap);
+      this.#interp.push(snap, performance.now());
       this.#fx.ingest(snap.ev);
       if (frameRefs.shakeEnabled)
         for (const event of snap.ev)
@@ -99,7 +99,7 @@ export class Scene {
 
     this.#painter.draw({
       room,
-      sample: this.#interp.sample(this.#interp.latestTick),
+      sample: this.#interp.sample(performance.now()),
       camera: this.#camera,
       local: this.#local,
       myIndex,

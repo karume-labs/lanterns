@@ -8,8 +8,11 @@ export const WORLD_SCALE = 0.5;
 /** World units per floor tile at the chosen zoom. */
 export const TILE = 32;
 
-/** Snapshots held back for interpolation (~133 ms at 15 Hz). */
-export const INTERP_DELAY_TICKS = 2;
+/**
+ * Render delay behind server time for interpolation. Two 15 Hz snapshot
+ * intervals (~67 ms each) so there is always a newer snapshot to blend toward.
+ */
+export const INTERP_DELAY_MS = 134;
 
 /**
  * Local-player reconciliation: snap hard past this error, ignore routine
