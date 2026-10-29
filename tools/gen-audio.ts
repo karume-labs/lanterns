@@ -5,8 +5,14 @@
  *
  * Short SFX stay WAV (mp3 encoder padding would smear tight clicks); the long
  * loops are encoded to mp3 with ffmpeg. Output lands in apps/client/public/audio.
+ *
+ * Loops: `lanterns.mp3` (catchy calm theme), `lanterns-battle.mp3` (same
+ * motif driven harder - the client crossfades toward it as the night gets
+ * dangerous), and `night.mp3` (a quiet wind bed that sits UNDER the music).
  */
-import { encodeMp3, mix, noise, SR, tone, wav } from "./audio-synth";
+
+import { encodeMp3, mix, noise, tone, wav } from "./audio-synth";
+import { battle, music, night } from "./audio-tracks";
 
 const OUT = "apps/client/public/audio";
 
@@ -66,71 +72,12 @@ const sfx: Record<string, Float32Array> = {
   ]),
 };
 
-/** Menu/lobby loop: Am-F-C-G, plucked arp over bass and a soft pad. */
-const music = (): Float32Array => {
-  const bars = 8;
-  const barSec = 2;
-  const chords = [220, 175, 262, 196];
-  const out = new Float32Array(bars * barSec * SR);
-  const place = (src: Float32Array, at: number, gain = 1): void => {
-    const off = Math.round(at * SR);
-    for (let i = 0; i < src.length && off + i < out.length; i++)
-      out[off + i] += (src[i] ?? 0) * gain;
-  };
-  for (let bar = 0; bar < bars; bar++) {
-    const root = chords[bar % 4];
-    const at = bar * barSec;
-    place(tone(2, root / 2, root / 2, "sin", 2.5, 0.5), at); // bass
-    place(tone(2, root, root, "sin", 1.4, 0.16), at); // pad
-    place(tone(2, root * 1.5, root * 1.5, "sin", 1.4, 0.12), at);
-    for (let step = 0; step < 8; step++) {
-      const note = root * [1, 1.5, 2, 3][(step * 3) % 4];
-      place(tone(0.22, note, note, "tri", 16, 0.3), at + step * 0.25);
-    }
-  }
-  // Simple feedback delay for air; fades to zero at the loop point.
-  const d = Math.round(0.28 * SR);
-  for (let i = d; i < out.length; i++) out[i] += (out[i - d] ?? 0) * 0.32;
-  const fade = Math.round(0.05 * SR);
-  for (let i = 0; i < fade; i++) {
-    const g = i / fade;
-    out[i] = (out[i] ?? 0) * g;
-    out[out.length - 1 - i] = (out[out.length - 1 - i] ?? 0) * g;
-  }
-  return out;
-};
-
-/** Night ambience loop: low wind plus sparse cricket pulses. */
-const night = (): Float32Array => {
-  const dur = 12;
-  const out = new Float32Array(dur * SR);
-  let seed = 7;
-  let lp = 0;
-  for (let i = 0; i < out.length; i++) {
-    seed = (seed * 1664525 + 1013904223) >>> 0;
-    const white = (seed / 0xffffffff) * 2 - 1;
-    lp = lp * 0.985 + white * 0.015;
-    out[i] = lp * 6 * (0.7 + 0.3 * Math.sin((i / SR) * 0.5));
-  }
-  for (let c = 0; c < 14; c++) {
-    const at = Math.round(((c * 0.83 + 0.4) % dur) * SR);
-    for (let p = 0; p < 4; p++) {
-      const start = at + p * 400;
-      for (let i = 0; i < 600 && start + i < out.length; i++)
-        out[start + i] =
-          (out[start + i] ?? 0) +
-          Math.sin((i / SR) * 2 * Math.PI * 4600) *
-            0.05 *
-            Math.exp(-(i / SR) * 60);
-    }
-  }
-  return out;
-};
-
 for (const [name, samples] of Object.entries(sfx))
   await wav(`${OUT}/sfx/${name}.wav`, samples);
 await wav("/tmp/lanterns-music.wav", music());
+await wav("/tmp/lanterns-battle.wav", battle());
 await wav("/tmp/lanterns-night.wav", night());
 encodeMp3("/tmp/lanterns-music.wav", `${OUT}/music/lanterns.mp3`);
+encodeMp3("/tmp/lanterns-battle.wav", `${OUT}/music/lanterns-battle.mp3`);
 encodeMp3("/tmp/lanterns-night.wav", `${OUT}/music/night.mp3`);
-console.log(`wrote ${Object.keys(sfx).length} sfx + 2 loops to ${OUT}`);
+console.log(`wrote ${Object.keys(sfx).length} sfx + 3 loops to ${OUT}`);
