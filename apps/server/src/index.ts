@@ -125,8 +125,7 @@ setInterval(() => {
         outcome: result.matchEnded.outcome,
         stats: result.matchEnded,
       });
-    if (result.snapshot)
-      publish(server, code, { type: "snapshot", snap: result.snapshot });
+    if (result.snapshotFrame) server.publish(code, result.snapshotFrame);
     recordTick(metrics, result.tickMicros, result.snapshotBytes);
   }
 }, ROOM_TICK_MS);

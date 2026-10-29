@@ -26,6 +26,8 @@ export interface MutationResult {
 export interface TickResult {
   room: RoomState;
   snapshot: Snapshot | null;
+  /** the snapshot already serialized once, ready to publish as-is */
+  snapshotFrame: string | null;
   /** broadcast a full room-state frame */
   roomState: boolean;
   events: RoomEventMsg[];

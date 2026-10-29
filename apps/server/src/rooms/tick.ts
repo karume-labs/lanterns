@@ -103,6 +103,7 @@ export const tickRoom = (room: RuntimeRoom, now: number): TickResult | null => {
 
   // Compact snapshot at half the tick rate; drains the event buffer.
   let snapshot: TickResult["snapshot"] = null;
+  let snapshotFrame: string | null = null;
   let snapshotBytes = 0;
   if (room.snapshotCounter % SNAPSHOT_EVERY_TICKS === 0) {
     const inHub =
@@ -113,7 +114,9 @@ export const tickRoom = (room: RuntimeRoom, now: number): TickResult | null => {
       now,
       inHub ? room.dummy.health : null,
     );
-    snapshotBytes = JSON.stringify(snapshot).length;
+    // Serialize once: the same string is published and measured.
+    snapshotFrame = JSON.stringify({ type: "snapshot", snap: snapshot });
+    snapshotBytes = snapshotFrame.length;
   }
   room.snapshotCounter += 1;
 
@@ -124,6 +127,7 @@ export const tickRoom = (room: RuntimeRoom, now: number): TickResult | null => {
   return {
     room: room.state,
     snapshot,
+    snapshotFrame,
     roomState,
     events,
     levelUp,
